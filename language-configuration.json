@@ -66,9 +66,33 @@
     ]
   ],
   "indentationRules": {
-    "increaseIndentPattern": "\\[%[-~+]?\\s*(IF|UNLESS|FOREACH|FOR|WHILE|SWITCH|TRY|WRAPPER|BLOCK|VIEW|FILTER|PERL|RAWPERL|ELSE|ELSIF|CASE|CATCH|FINAL)\\b(?![^%]*\\bEND\\b)",
-    "decreaseIndentPattern": "\\[%[-~+]?\\s*(END|ELSE|ELSIF|CASE|CATCH|FINAL)\\b"
+    "increaseIndentPattern": "<(?!\\?|(?:area|base|br|col|frame|hr|html|img|input|keygen|link|menuitem|meta|param|source|track|wbr)\\b|[^>]*\\/>)([-_\\.A-Za-z0-9]+)(?=\\s|>)\\b[^>]*>(?!.*<\\/\\1>)|<!--(?!.*-->)|\\{[^}\\\"']*$|\\[%[-~+]?\\s*(?:IF|UNLESS|FOREACH|FOR|WHILE|SWITCH|TRY|WRAPPER|BLOCK|VIEW|FILTER|PERL|RAWPERL|ELSE|ELSIF|CASE|CATCH|FINAL)\\b(?![^%]*\\bEND\\b)",
+    "decreaseIndentPattern": "^\\s*(?:<\\/(?!html)[-_\\.A-Za-z0-9]+\\b[^>]*>|-->|\\})|\\[%[-~+]?\\s*(?:END|ELSE|ELSIF|CASE|CATCH|FINAL)\\b"
   },
+  "onEnterRules": [
+    {
+      "beforeText": {
+        "pattern": "<(?!(?:area|base|br|col|embed|hr|img|input|keygen|link|menuitem|meta|param|source|track|wbr))([_:\\w][_:\\w-.\\d]*)(?:(?:[^'\"/>]|\"[^\"]*\"|'[^']*')*?(?!\\/)>)[^<]*$",
+        "flags": "i"
+      },
+      "afterText": {
+        "pattern": "^<\\/([_:\\w][_:\\w-.\\d]*)\\s*>",
+        "flags": "i"
+      },
+      "action": {
+        "indent": "indentOutdent"
+      }
+    },
+    {
+      "beforeText": {
+        "pattern": "<(?!(?:area|base|br|col|embed|hr|img|input|keygen|link|menuitem|meta|param|source|track|wbr))([_:\\w][_:\\w-.\\d]*)(?:(?:[^'\"/>]|\"[^\"]*\"|'[^']*')*?(?!\\/)>)[^<]*$",
+        "flags": "i"
+      },
+      "action": {
+        "indent": "indent"
+      }
+    }
+  ],
   "folding": {
     "markers": {
       "start": "\\[%[-~+]?\\s*(IF|UNLESS|FOREACH|FOR|WHILE|SWITCH|TRY|WRAPPER|BLOCK|VIEW|FILTER|PERL|RAWPERL)\\b",
