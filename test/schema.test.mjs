@@ -367,3 +367,62 @@ test("empty entries are ignored rather than resolving to the workspace root", ()
   s.build([workspaceWithDump()]);
   assert.ok(lookup(s.schema, ["ir", "from_local"]));
 });
+
+// ------------------------------------------------- what counts as a dump
+// The format is sniffed from content, so the extension only decides what gets
+// opened. Reading everything let a stray log with `key = value` lines inject
+// its keys as top-level completion roots.
+
+function dumpDir() {
+  const d = mkdtempSync(join(tmpdir(), "tt-ext-"));
+  mkdirSync(join(d, ".tt-schema"), { recursive: true });
+  return d;
+}
+
+test(".txt and .json are both read, and the format comes from content", () => {
+  const d = dumpDir();
+  writeFileSync(join(d, ".tt-schema", "tree.txt"), "ir\n`- from_txt = 1\n");
+  writeFileSync(join(d, ".tt-schema", "data.json"), JSON.stringify({ ir: { from_json: 1 } }));
+  const s = new SchemaStore();
+  s.build([d]);
+  assert.ok(lookup(s.schema, ["ir", "from_txt"]));
+  assert.ok(lookup(s.schema, ["ir", "from_json"]));
+  assert.equal(s.report.dumpFiles, 2);
+});
+
+test("a JSON dump named .txt is still read as JSON", () => {
+  const d = dumpDir();
+  writeFileSync(join(d, ".tt-schema", "mislabelled.txt"),
+    JSON.stringify({ ir: { rows: [{ name: "a" }] } }));
+  const s = new SchemaStore();
+  s.build([d]);
+  assert.equal(lookup(s.schema, ["ir", "rows"])?.kind, "list");
+});
+
+test("a stray log file does not become part of the schema", () => {
+  const d = dumpDir();
+  writeFileSync(join(d, ".tt-schema", "real.txt"), "ir\n`- good = 1\n");
+  writeFileSync(join(d, ".tt-schema", "render.log"), "status = ok\nsecret_key = abc\n");
+  const s = new SchemaStore();
+  s.build([d]);
+  assert.deepEqual([...s.schema.children.keys()], ["ir"]);
+  assert.equal(s.report.dumpFiles, 1);
+  assert.deepEqual(s.report.dumpsWithSecrets, []);
+});
+
+test("notes can sit alongside dumps without polluting completion", () => {
+  const d = dumpDir();
+  writeFileSync(join(d, ".tt-schema", "real.txt"), "ir\n`- good = 1\n");
+  writeFileSync(join(d, ".tt-schema", "README.md"), "notes = here\n");
+  const s = new SchemaStore();
+  s.build([d]);
+  assert.ok(!lookup(s.schema, ["notes"]), "README.md leaked into the schema");
+});
+
+test("a file that yields no paths is not counted as a dump", () => {
+  const d = dumpDir();
+  writeFileSync(join(d, ".tt-schema", "empty.txt"), "\n\n");
+  const s = new SchemaStore();
+  s.build([d]);
+  assert.equal(s.report.dumpFiles, 0);
+});

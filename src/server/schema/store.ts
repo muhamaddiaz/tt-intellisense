@@ -45,6 +45,18 @@ export interface StoreReport {
 }
 
 const TEMPLATE_EXTENSIONS = [".tt", ".ttml", ".tt2"];
+
+/**
+ * Extensions accepted for stash dumps.
+ *
+ * The format is detected from content, not from the name, so the extension is
+ * only a filter on what to open at all. Reading every file in the directory
+ * was worse than it sounds: a stray log whose lines happen to look like
+ * `key = value` parses as a dump and injects its keys as top-level completion
+ * roots. Restricting the set means a README or a note can sit alongside the
+ * dumps without becoming part of the schema.
+ */
+const DUMP_EXTENSIONS = [".json", ".txt", ".dump", ".tree", ".stash"];
 const SKIP_DIRECTORIES = new Set(["node_modules", ".git", "out", "dist", ".vscode-test"]);
 
 export class SchemaStore {
@@ -135,7 +147,14 @@ export class SchemaStore {
         seen.add(file);
         const text = readIfFile(file, this.options.maxFileBytes);
         if (text === undefined) continue;
-        merge(this.dumpLayer, parseDump(text));
+
+        // A file that yields no paths is not a dump, whatever it is called.
+        // Counting it would make the startup message claim coverage that does
+        // not exist.
+        const parsed = parseDump(text);
+        if (countChildren(parsed) === 0) continue;
+
+        merge(this.dumpLayer, parsed);
         report.dumpFiles++;
         if (looksLikeItHoldsSecrets(text)) report.dumpsWithSecrets.push(basename(file));
       }
@@ -224,6 +243,7 @@ function listFiles(dir: string): string[] {
   try {
     return readdirSync(dir)
       .filter((e) => !e.startsWith("."))
+      .filter((e) => DUMP_EXTENSIONS.some((x) => e.toLowerCase().endsWith(x)))
       .map((e) => join(dir, e))
       .filter((p) => {
         try {

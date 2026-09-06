@@ -194,8 +194,18 @@ Keeping the shared dump outside every repository is worth doing for its own
 sake, not just for convenience: a file in your home folder cannot be committed
 by accident.
 
+#### File names and formats
+
+The format is detected from the file's **content**, not its name, so a `.txt`
+holding JSON is read as JSON. Files ending `.json`, `.txt`, `.dump`, `.tree` or
+`.stash` are opened; anything else in the folder is ignored, so you can keep a
+`README.md` next to your dumps without its contents turning into completions.
+
 **JSON is preferred**, because it states outright which fields are lists. The
-ASCII tree format your Perl side already produces is also read.
+ASCII tree your Perl side already produces is fine too — it can even express
+lists, since Perl's array indices survive as the keys `0`, `1`, `2`, and those
+are recovered. It just cannot distinguish a real hash keyed `0, 1, 2` from an
+array, where JSON can.
 
 > **⚠️ Never commit `.tt-schema/`.** Dumps capture real values from real renders
 > and routinely contain credentials. The `.gitignore` here already excludes it.
