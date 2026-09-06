@@ -1,0 +1,13 @@
+.git/**
+.tt-schema/**
+.claude/**
+src/**
+test/**
+docs/**
+out/**/*.map
+node_modules/.bin/**
+tsconfig.json
+CONTEXT.md
+**/*.ts
+.gitignore
+.vscodeignore
