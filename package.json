@@ -4,6 +4,11 @@
   "description": "Language support for Perl Template Toolkit: highlighting, navigation, diagnostics and variable completion.",
   "version": "0.1.0",
   "license": "MIT",
+  "icon": "images/extension-icon.png",
+  "galleryBanner": {
+    "color": "#071331",
+    "theme": "dark"
+  },
   "engines": {
     "vscode": "^1.75.0"
   },
@@ -24,6 +29,10 @@
           ".ttml",
           ".tt2"
         ],
+        "icon": {
+          "light": "./images/tt-file-light.svg",
+          "dark": "./images/tt-file-dark.svg"
+        },
         "configuration": "./language-configuration.json"
       }
     ],
