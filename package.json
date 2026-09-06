@@ -1,0 +1,61 @@
+{
+  "name": "tt-intellisense",
+  "displayName": "TT IntelliSense",
+  "description": "Language support for Perl Template Toolkit: highlighting, navigation, diagnostics and variable completion.",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "main": "./out/client/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "tt",
+        "aliases": [
+          "Template Toolkit",
+          "tt"
+        ],
+        "extensions": [
+          ".tt",
+          ".ttml",
+          ".tt2"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "tt",
+        "scopeName": "text.html.tt",
+        "path": "./syntaxes/tt.tmLanguage.json",
+        "embeddedLanguages": {
+          "source.js": "javascript",
+          "source.css": "css"
+        }
+      },
+      {
+        "scopeName": "text.html.tt.injection",
+        "path": "./syntaxes/tt-injection.tmLanguage.json",
+        "injectTo": [
+          "text.html.tt"
+        ]
+      }
+    ]
+  },
+  "scripts": {
+    "build": "tsc -p .",
+    "test": "node --test test/*.test.mjs",
+    "pretest": "node test/fetch-grammars.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0",
+    "vscode-oniguruma": "^2.0.1",
+    "vscode-textmate": "^9.3.2"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "comments": { "blockComment": ["[%# ", " %]"] },
+  "brackets": [["[%", "%]"], ["<", ">"], ["{", "}"], ["(", ")"]],
+  "autoClosingPairs": [
+    { "open": "[%", "close": " %]" },
+    { "open": "\"", "close": "\"", "notIn": ["string"] },
+    { "open": "'", "close": "'", "notIn": ["string"] },
+    { "open": "(", "close": ")" }
+  ],
+  "surroundingPairs": [["[%", "%]"], ["\"", "\""], ["'", "'"], ["(", ")"]],
+  "indentationRules": {
+    "increaseIndentPattern": "\\[%[-~+]?\\s*(IF|UNLESS|FOREACH|FOR|WHILE|SWITCH|TRY|WRAPPER|BLOCK|FILTER|PERL|RAWPERL|ELSE|ELSIF|CASE|CATCH|FINAL)\\b(?![^%]*\\bEND\\b)",
+    "decreaseIndentPattern": "\\[%[-~+]?\\s*(END|ELSE|ELSIF|CASE|CATCH|FINAL)\\b"
+  },
+  "folding": {
+    "markers": {
+      "start": "\\[%[-~+]?\\s*(IF|UNLESS|FOREACH|FOR|WHILE|SWITCH|TRY|WRAPPER|BLOCK|FILTER|PERL|RAWPERL)\\b",
+      "end": "\\[%[-~+]?\\s*END\\s*[-~+]?%\\]"
+    }
+  }
+}

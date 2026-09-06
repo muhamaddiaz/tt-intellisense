@@ -1,0 +1,70 @@
+ir
+|- config
+|  |- acl_group =  (no elements)
+|  |- authen_user
+|  |  `- url_login = /user_login.html?r=_REFERRER_
+|  |- company
+|  |  |- coy_id = 1234
+|  |  |- edition
+|  |  |  |- mobile
+|  |  |  |  `- url = https://example-mobile.invalid
+|  |  |  `- web
+|  |  |     `- url = https://example.invalid
+|  |  |- edition_available
+|  |  |  |- mobile = 0
+|  |  |  |- tablet = 0
+|  |  |  `- web = 1
+|  |  |- recaptcha_v2_keys
+|  |  |  |- secret_key = REDACTED_FIXTURE_VALUE
+|  |  |  `- site_key = REDACTED_FIXTURE_VALUE
+|  |  |- tt_link_ext
+|  |  |  |- default = html
+|  |  |  `- revamp = rev
+|  |  |- tt_root_by_host_config
+|  |  |  `- host
+|  |  |     |- example.invalid
+|  |  |     |  |- ext
+|  |  |     |  |  `- revamp
+|  |  |     |  |     `- tt_root = www_rev
+|  |  |     |  |- language = en
+|  |  |     |  `- tt_root = www
+|  |  |     `- default
+|  |  |        |- language = en
+|  |  |        `- tt_root = www
+|  |  `- url_domain = https://investor.example.invalid
+|  |- page_config
+|  |  `- page
+|  |     |- id = boc_bod
+|  |     `- url = /boc_bod.html
+|  `- unset_branch = undef
+|- env
+|  |- HTTP_HOST = example.invalid
+|  `- REQUEST_METHOD = GET
+|- form =  (no elements)
+|- path =  (no elements)
+|- query
+|  `- lang = en
+|- time
+|  |- epoch = 1750000000
+|  `- year = 2026
+|- user_agent
+|  |- is_mobile = 0
+|  `- is_search_engine_swishe = undef
+`- var
+   |- ir_Config
+   |  `- format
+   |     |- name_full = EXAMPLE HOLDINGS LIMITED
+   |     `- name_short = Example Hldgs
+   |- ir_Download
+   |  `- financials
+   |     `- format
+   |        `- download =  (no elements)
+   `- sgx_Info
+      |- format
+      |  |- ID = X1X
+      |  |- NAME_FULL = EXAMPLE HOLDINGS LIMITED
+      |  |- WEBSITE = undef
+      |  `- IR_URL = http://example.invalid
+      `- raw
+         |- ID = X1X
+         `- WEBSITE = undef

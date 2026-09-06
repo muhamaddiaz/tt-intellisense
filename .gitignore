@@ -1,0 +1,12 @@
+# Runtime stash dumps. These carry real values from real page renders,
+# including credentials. Never commit them.
+.tt-schema/
+
+node_modules/
+out/
+dist/
+*.vsix
+.vscode-test/
+
+# Upstream grammars fetched for headless tokenizer tests (not ours to vendor)
+test/fixtures/grammars/

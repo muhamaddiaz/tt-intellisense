@@ -1,0 +1,390 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Template Toolkit (injection)",
+  "scopeName": "text.html.tt.injection",
+  "injectionSelector": "L:text.html.tt",
+  "patterns": [
+    {
+      "include": "#comment-tag"
+    },
+    {
+      "include": "#outline-comment"
+    },
+    {
+      "include": "#tag"
+    },
+    {
+      "include": "#outline-tag"
+    }
+  ],
+  "repository": {
+    "comment-tag": {
+      "name": "comment.block.tt",
+      "begin": "\\[%[-~+]?#",
+      "end": "[-~+]?%\\]",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.comment.begin.tt"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.comment.end.tt"
+        }
+      }
+    },
+    "outline-comment": {
+      "name": "comment.line.tt",
+      "begin": "^\\s*%%#",
+      "end": "$"
+    },
+    "tag": {
+      "name": "meta.embedded.block.tt",
+      "begin": "(\\[%)([-~+]?)",
+      "end": "([-~+]?)(%\\])",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.section.embedded.begin.tt"
+        },
+        "2": {
+          "name": "keyword.operator.chomp.tt"
+        }
+      },
+      "endCaptures": {
+        "1": {
+          "name": "keyword.operator.chomp.tt"
+        },
+        "2": {
+          "name": "punctuation.section.embedded.end.tt"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#expression"
+        }
+      ]
+    },
+    "outline-tag": {
+      "name": "meta.embedded.line.tt",
+      "begin": "^\\s*(%%)",
+      "end": "$",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.section.embedded.begin.tt"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#expression"
+        }
+      ]
+    },
+    "expression": {
+      "patterns": [
+        {
+          "include": "#line-comment"
+        },
+        {
+          "include": "#string-double"
+        },
+        {
+          "include": "#string-single"
+        },
+        {
+          "include": "#template-ref"
+        },
+        {
+          "include": "#wrapper-ref"
+        },
+        {
+          "include": "#block-name"
+        },
+        {
+          "include": "#macro-name"
+        },
+        {
+          "include": "#filter-directive"
+        },
+        {
+          "include": "#use-directive"
+        },
+        {
+          "include": "#keyword-block"
+        },
+        {
+          "include": "#keyword-terminator"
+        },
+        {
+          "include": "#keyword-control"
+        },
+        {
+          "include": "#keyword-include"
+        },
+        {
+          "include": "#keyword-assign"
+        },
+        {
+          "include": "#keyword-meta"
+        },
+        {
+          "include": "#operator-word"
+        },
+        {
+          "include": "#constant"
+        },
+        {
+          "include": "#filter-pipe"
+        },
+        {
+          "include": "#number"
+        },
+        {
+          "include": "#vmethod-call"
+        },
+        {
+          "include": "#member"
+        },
+        {
+          "include": "#dollar-var"
+        },
+        {
+          "include": "#operator"
+        },
+        {
+          "include": "#variable"
+        },
+        {
+          "include": "#punctuation"
+        }
+      ]
+    },
+    "line-comment": {
+      "name": "comment.line.number-sign.tt",
+      "match": "#(?:(?![-~+]?%\\]).)*"
+    },
+    "string-double": {
+      "name": "string.quoted.double.tt",
+      "begin": "\"",
+      "end": "\"",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.begin.tt"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.end.tt"
+        }
+      },
+      "patterns": [
+        {
+          "name": "constant.character.escape.tt",
+          "match": "\\\\."
+        },
+        {
+          "name": "meta.interpolation.tt",
+          "match": "(\\$\\{)([^}]*)(\\})",
+          "captures": {
+            "1": {
+              "name": "punctuation.definition.template-expression.begin.tt"
+            },
+            "2": {
+              "name": "variable.other.tt"
+            },
+            "3": {
+              "name": "punctuation.definition.template-expression.end.tt"
+            }
+          }
+        },
+        {
+          "name": "variable.other.interpolated.tt",
+          "match": "\\$[a-zA-Z_][a-zA-Z0-9_.]*"
+        }
+      ]
+    },
+    "string-single": {
+      "name": "string.quoted.single.tt",
+      "begin": "'",
+      "end": "'",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.begin.tt"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.end.tt"
+        }
+      },
+      "patterns": [
+        {
+          "name": "constant.character.escape.tt",
+          "match": "\\\\."
+        }
+      ]
+    },
+    "keyword-block": {
+      "name": "keyword.control.block.tt",
+      "match": "\\b(IF|UNLESS|ELSIF|ELSE|FOREACH|FOR|WHILE|SWITCH|CASE|TRY|CATCH|FINAL|BLOCK|WRAPPER|FILTER|MACRO|PERL|RAWPERL)\\b"
+    },
+    "keyword-terminator": {
+      "name": "keyword.control.end.tt",
+      "match": "\\bEND\\b"
+    },
+    "keyword-control": {
+      "name": "keyword.control.flow.tt",
+      "match": "\\b(NEXT|LAST|BREAK|RETURN|STOP|CLEAR|THROW)\\b"
+    },
+    "keyword-include": {
+      "name": "keyword.control.import.tt",
+      "match": "\\b(INCLUDE|PROCESS|INSERT|USE)\\b"
+    },
+    "keyword-assign": {
+      "name": "keyword.other.tt",
+      "match": "\\b(GET|SET|CALL|DEFAULT)\\b"
+    },
+    "keyword-meta": {
+      "name": "keyword.other.meta.tt",
+      "match": "\\b(META|TAGS|DEBUG)\\b"
+    },
+    "operator-word": {
+      "name": "keyword.operator.word.tt",
+      "match": "\\b(IN|AND|OR|NOT|and|or|not|MOD|DIV|div|mod|TO|STEP)\\b"
+    },
+    "constant": {
+      "name": "constant.language.tt",
+      "match": "\\b(undef|true|false)\\b"
+    },
+    "filter-pipe": {
+      "match": "(\\|)\\s*([a-zA-Z_][a-zA-Z0-9_]*)",
+      "captures": {
+        "1": {
+          "name": "keyword.operator.filter.tt"
+        },
+        "2": {
+          "name": "support.function.filter.tt"
+        }
+      }
+    },
+    "number": {
+      "name": "constant.numeric.tt",
+      "match": "\\b\\d+(\\.\\d+)?\\b"
+    },
+    "vmethod-call": {
+      "match": "(\\.)(\\$?[a-zA-Z_][a-zA-Z0-9_]*)(?=\\s*\\()",
+      "captures": {
+        "1": {
+          "name": "punctuation.accessor.tt"
+        },
+        "2": {
+          "name": "support.function.vmethod.tt"
+        }
+      }
+    },
+    "member": {
+      "match": "(\\.)(\\$?[a-zA-Z_][a-zA-Z0-9_]*)",
+      "captures": {
+        "1": {
+          "name": "punctuation.accessor.tt"
+        },
+        "2": {
+          "name": "variable.other.member.tt"
+        }
+      }
+    },
+    "dollar-var": {
+      "name": "variable.other.dollar.tt",
+      "match": "\\$\\{?[a-zA-Z_][a-zA-Z0-9_.]*\\}?"
+    },
+    "operator": {
+      "name": "keyword.operator.tt",
+      "match": "(==|!=|<=|>=|&&|\\|\\||=>|[<>!=+*/?:])|(?<=\\s)[_-](?=\\s)"
+    },
+    "variable": {
+      "name": "variable.other.tt",
+      "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b"
+    },
+    "punctuation": {
+      "patterns": [
+        {
+          "name": "punctuation.separator.tt",
+          "match": "[,;]"
+        },
+        {
+          "name": "meta.brace.round.tt",
+          "match": "[()]"
+        },
+        {
+          "name": "meta.brace.square.tt",
+          "match": "[\\[\\]]"
+        }
+      ]
+    },
+    "filter-directive": {
+      "match": "\\b(FILTER)\\s+([a-zA-Z_][a-zA-Z0-9_]*)",
+      "captures": {
+        "1": {
+          "name": "keyword.control.block.tt"
+        },
+        "2": {
+          "name": "support.function.filter.tt"
+        }
+      }
+    },
+    "use-directive": {
+      "match": "\\b(USE)\\s+([a-zA-Z_][a-zA-Z0-9_:.]*)",
+      "captures": {
+        "1": {
+          "name": "keyword.control.import.tt"
+        },
+        "2": {
+          "name": "support.class.plugin.tt"
+        }
+      }
+    },
+    "template-ref": {
+      "match": "\\b(INCLUDE|PROCESS|INSERT)\\s+([a-zA-Z_][a-zA-Z0-9_./-]*)",
+      "captures": {
+        "1": {
+          "name": "keyword.control.import.tt"
+        },
+        "2": {
+          "name": "string.unquoted.template-name.tt"
+        }
+      }
+    },
+    "block-name": {
+      "match": "\\b(BLOCK)\\s+([a-zA-Z_][a-zA-Z0-9_./-]*)",
+      "captures": {
+        "1": {
+          "name": "keyword.control.block.tt"
+        },
+        "2": {
+          "name": "entity.name.function.block.tt"
+        }
+      }
+    },
+    "macro-name": {
+      "match": "\\b(MACRO)\\s+([a-zA-Z_][a-zA-Z0-9_]*)",
+      "captures": {
+        "1": {
+          "name": "keyword.control.block.tt"
+        },
+        "2": {
+          "name": "entity.name.function.macro.tt"
+        }
+      }
+    },
+    "wrapper-ref": {
+      "match": "\\b(WRAPPER)\\s+([a-zA-Z_][a-zA-Z0-9_./-]*)",
+      "captures": {
+        "1": {
+          "name": "keyword.control.block.tt"
+        },
+        "2": {
+          "name": "string.unquoted.template-name.tt"
+        }
+      }
+    }
+  }
+}
