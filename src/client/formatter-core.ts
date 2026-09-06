@@ -132,6 +132,12 @@ export async function formatTemplate(
     plugins: [...workspacePlugins, safeTemplateToolkitPlugin],
   });
 
+  // A failed embedded HTML parse can make the upstream TT printer fall back to
+  // an empty root document. Never let that failure become a whole-file delete.
+  if (source.trim().length > 0 && formatted.trim().length === 0) {
+    throw new Error("The formatter produced empty output for a non-empty document.");
+  }
+
   return protectedSource.restore(formatted);
 }
 

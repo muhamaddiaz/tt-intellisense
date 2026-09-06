@@ -75,6 +75,16 @@ test("formats every previously unsupported TT block form", async () => {
   }
 });
 
+test("never replaces malformed non-empty HTML with an empty document", async () => {
+  await assert.rejects(
+    formatTemplate("<p>Hello<ul><li>World</li></ul></p>", {
+      tabWidth: 2,
+      useTabs: false,
+    }),
+    /formatter produced empty output for a non-empty document/
+  );
+});
+
 test("minimalReplacement limits an edit to the changed text", () => {
   assert.deepEqual(minimalReplacement("hello world", "hello brave world"), {
     start: 6,
