@@ -381,7 +381,11 @@ npm run package   # build the .vsix
 The same commands work on Windows, macOS and Linux.
 
 Grammar correctness is checked headlessly, so no editor is needed to run the
-suite. Upstream HTML/CSS/JS grammars are fetched into `test/fixtures/grammars/`
+suite. The client half — the code that talks to the editor API — runs against a
+strict `vscode` mock in `test/mocks/`, which rejects a plain object where the
+real API requires one of its own types. That is not pedantry: the client once
+handed the protocol's plain JSON straight to the edit API, and comment toggling
+did not work at all while every server test passed. Upstream HTML/CSS/JS grammars are fetched into `test/fixtures/grammars/`
 on first run and are not committed.
 
 To run the parser and grammar over a real tree of templates:
