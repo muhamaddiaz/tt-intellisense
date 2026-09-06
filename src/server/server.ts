@@ -1,13 +1,14 @@
 /**
  * TT IntelliSense language server.
  *
- * M2 brought navigation, M3 adds the parser and everything that hangs off it:
- * structural diagnostics, folding, an outline, and cross-file block lookup.
- * Completion and hover arrive with M4.
+ * Serves navigation, structural diagnostics, folding, an outline, variable
+ * completion and hover over a layered schema, and forwards to the embedded
+ * HTML and CSS services when the cursor is outside a directive.
  */
 import {
   CompletionItemKind,
   DidChangeConfigurationNotification,
+  DidChangeWatchedFilesNotification,
   DocumentLink,
   Location,
   MarkupKind,
@@ -41,7 +42,7 @@ import {
   type Suggestion,
 } from "./complete";
 import { hoverAt } from "./hover";
-import { DEFAULT_STORE_OPTIONS, SchemaStore } from "./schema/store";
+import { SchemaStore } from "./schema/store";
 import {
   embeddedCompletion,
   embeddedHover,
@@ -59,6 +60,7 @@ let configuredRoots: string[] = [];
 let structuralDiagnostics = true;
 let embeddedEnabled = true;
 let supportsConfiguration = false;
+let supportsFileWatching = false;
 
 /** Parses are cached per document version; every feature request would reparse otherwise. */
 const cache = new Map<string, { version: number; result: ParseResult }>();
@@ -85,6 +87,9 @@ function rangeOf(doc: TextDocument, start: number, end: number): Range {
 
 connection.onInitialize((params: InitializeParams): InitializeResult => {
   supportsConfiguration = Boolean(params.capabilities.workspace?.configuration);
+  supportsFileWatching = Boolean(
+    params.capabilities.workspace?.didChangeWatchedFiles?.dynamicRegistration
+  );
 
   workspaceDirs = (params.workspaceFolders ?? [])
     .map((f) => {
@@ -104,7 +109,7 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
       foldingRangeProvider: true,
       documentSymbolProvider: true,
       hoverProvider: true,
-        completionProvider: {
+      completionProvider: {
         // `.` and `%` open TT paths and tags; `<`, `/` and `:` are the HTML and
         // CSS triggers, forwarded when the cursor is outside a directive.
         triggerCharacters: [".", "%", " ", "<", "/", ":", "-"],
@@ -119,33 +124,77 @@ connection.onInitialized(() => {
     void connection.client.register(DidChangeConfigurationNotification.type, undefined);
     void refreshConfiguration();
   }
+  if (supportsFileWatching) {
+    void connection.client.register(DidChangeWatchedFilesNotification.type, {
+      watchers: [
+        { globPattern: "**/*.{tt,ttml,tt2}" },
+        { globPattern: "**/.tt-schema/**" },
+        { globPattern: "**/tt-schema.json" },
+      ],
+    });
+  }
+
   // Deferred: indexing a large tree takes seconds and must not delay startup.
-  setTimeout(() => {
-    index.build(workspaceDirs);
+  setTimeout(() => rebuild(true), 0);
+});
+
+/** Tracks whether a credentials warning has already been shown, per file. */
+const warnedAboutDumps = new Set<string>();
+
+/**
+ * Rebuilds the block index and the schema from disk.
+ *
+ * Open documents are re-applied afterwards: a rebuild reads what is on disk,
+ * and unsaved edits would otherwise disappear from the index until the next
+ * keystroke.
+ */
+function rebuild(announce: boolean): void {
+  index.build(workspaceDirs);
+  schema.build(workspaceDirs);
+
+  for (const doc of documents.all()) {
+    const path = docPath(doc);
+    if (path) index.setFile(path, doc.getText());
+    schema.updateDocument(doc.uri, doc.getText());
+  }
+
+  const r = schema.report;
+  if (announce) {
     connection.console.info(
       `TT: indexed ${index.size} block names across ${index.fileCount} files`
     );
-
-    schema.build(workspaceDirs);
-    const r = schema.report;
     connection.console.info(
       `TT: schema from ${r.dumpFiles} dump(s) (${r.dumpPaths} paths), ` +
         `${r.minedFiles} mined template(s)` +
         (r.curated ? ", curated overrides loaded" : "")
     );
+  }
 
-    // A dump captured from a real render can carry credentials. Values are
-    // redacted on display regardless, but a file like this must not be
-    // committed, and its author may not know what ended up in it.
-    if (r.dumpsWithSecrets.length) {
-      const names = r.dumpsWithSecrets.join(", ");
-      connection.window.showWarningMessage(
-        `TT IntelliSense: ${names} appears to contain credentials. ` +
-          `Values are hidden in hover, but keep ${DEFAULT_STORE_OPTIONS.dumpDirectory}/ out of version control.`
-      );
-    }
-  }, 0);
-});
+  // A dump captured from a real render can carry credentials. Values are
+  // redacted on display regardless, but a file like this must not be committed,
+  // and its author may not know what ended up in it. Warn once per file, since
+  // a rebuild can now happen on any file change.
+  const fresh = r.dumpsWithSecrets.filter((n) => !warnedAboutDumps.has(n));
+  if (fresh.length) {
+    for (const n of fresh) warnedAboutDumps.add(n);
+    connection.window.showWarningMessage(
+      `TT IntelliSense: ${fresh.join(", ")} appears to contain credentials. ` +
+        `Values are hidden in hover, but keep ${schema.dumpDirectory}/ out of version control.`
+    );
+  }
+}
+
+/** Coalesces bursts of file events into one rebuild. */
+let rebuildTimer: NodeJS.Timeout | undefined;
+function scheduleRebuild(): void {
+  if (rebuildTimer) clearTimeout(rebuildTimer);
+  rebuildTimer = setTimeout(() => {
+    rebuildTimer = undefined;
+    rebuild(false);
+  }, 400);
+}
+
+connection.onDidChangeWatchedFiles(() => scheduleRebuild());
 
 async function refreshConfiguration(): Promise<void> {
   if (!supportsConfiguration) return;
@@ -155,6 +204,18 @@ async function refreshConfiguration(): Promise<void> {
     configuredRoots = raw.filter((r: unknown): r is string => typeof r === "string");
     structuralDiagnostics = cfg?.diagnostics?.structural !== false;
     embeddedEnabled = cfg?.embedded?.enabled !== false;
+
+    const changed = schema.configure({
+      ...(typeof cfg?.schema?.dumpDirectory === "string"
+        ? { dumpDirectory: cfg.schema.dumpDirectory }
+        : {}),
+      ...(typeof cfg?.schema?.curatedFile === "string"
+        ? { curatedFile: cfg.schema.curatedFile }
+        : {}),
+    });
+    // Where dumps and the curated file are read from changes what the schema
+    // contains, so it has to be rebuilt rather than merely re-read.
+    if (changed) scheduleRebuild();
   } catch {
     configuredRoots = [];
     structuralDiagnostics = true;
@@ -262,7 +323,7 @@ connection.onFoldingRanges((params): FoldingRange[] => {
 connection.onDocumentSymbol((params): DocumentSymbol[] => {
   const doc = documents.get(params.textDocument.uri);
   if (!doc) return [];
-  return toDocumentSymbols(doc.getText(), parsed(doc), (o) => doc.positionAt(o));
+  return toDocumentSymbols(parsed(doc), (o) => doc.positionAt(o));
 });
 
 /**

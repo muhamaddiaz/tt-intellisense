@@ -44,8 +44,11 @@ export function completionContext(
   offset: number,
   result: ParseResult
 ): CompletionContext {
+  // `>=` rather than `>`: with the cursor immediately after `[%` and nothing
+  // typed yet, the user is inside a directive and wants directive completion,
+  // not HTML.
   const tag = result.tags.find(
-    (t) => t.kind !== "comment" && offset > t.bodyStart && offset <= t.bodyEnd
+    (t) => t.kind !== "comment" && offset >= t.bodyStart && offset <= t.bodyEnd
   );
   if (!tag) {
     return { inDirective: false, base: [], partial: "", atDirectiveHead: false };
@@ -90,15 +93,75 @@ export function enclosingBlocks(result: ParseResult, offset: number): ParsedBloc
 }
 
 /**
+ * The innermost block containing an offset, or null at the top level.
+ *
+ * Walks down the tree rather than scanning every block, so this stays cheap
+ * enough to call once per directive on each keystroke.
+ */
+function innermostBlock(blocks: ParsedBlock[], offset: number): ParsedBlock | null {
+  let current: ParsedBlock | null = null;
+  let level = blocks;
+
+  for (;;) {
+    const next = level.find((b) => offset >= b.start && offset <= b.end);
+    if (!next) return current;
+    current = next;
+    level = next.children;
+  }
+}
+
+/**
+ * Directives that are still in scope at `offset`.
+ *
+ * A directive sealed inside a block that has already closed is not visible:
+ * after `[% FOREACH r IN x %][% tmp = a.b %][% END %]`, `tmp` is gone. Blocks
+ * nest properly, so testing the innermost block is enough — if it contains the
+ * cursor then so does every ancestor.
+ */
+function visibleDirectives(result: ParseResult, offset: number) {
+  const chain = new Set(enclosingBlocks(result, offset));
+  const out = [];
+
+  for (const directive of result.directives) {
+    // Directives arrive in document order, so nothing after the cursor matters.
+    if (directive.start >= offset) break;
+    const owner = innermostBlock(result.blocks, directive.start);
+    if (owner && !chain.has(owner)) continue;
+    out.push(directive);
+  }
+
+  return out;
+}
+
+/**
  * Local bindings visible at an offset.
  *
- * Inner scopes come last so a nested loop shadows an outer one, matching how a
- * reader would understand the template.
+ * Assignments are applied in document order so the most recent one wins, then
+ * loop aliases are laid over them: inside a loop the alias is what the name
+ * means, whatever was assigned to it earlier. Inner loops shadow outer ones.
  */
 export function scopeAt(result: ParseResult, offset: number): Map<string, ScopeBinding> {
   const out = new Map<string, ScopeBinding>();
   const constants = collectConstants(result);
 
+  // Assignments, in document order, so a later one replaces an earlier one.
+  for (const directive of visibleDirectives(result, offset)) {
+    const t = directive.tokens;
+    const index = directive.keyword === "SET" || directive.keyword === "DEFAULT" ? 1 : 0;
+    const name = t[index];
+    const eq = t[index + 1];
+    if (!name || name.kind !== "ident" || !eq || eq.value !== "=") continue;
+
+    const source = readVariablePath(t, index + 2, constants)?.segments ?? [];
+    out.set(name.value, {
+      name: name.value,
+      source: source.length > 1 ? source : null,
+      isLoop: false,
+      origin: `${name.value} = ${source.join(".") || "…"}`,
+    });
+  }
+
+  // Loop aliases last: outermost first, so a nested loop shadows an outer one.
   for (const block of enclosingBlocks(result, offset)) {
     if (block.keyword !== "FOREACH" && block.keyword !== "FOR") continue;
     const t = block.opener.tokens;
@@ -106,30 +169,13 @@ export function scopeAt(result: ParseResult, offset: number): Map<string, ScopeB
     const link = t[2];
     if (!alias || alias.kind !== "ident" || !link) continue;
     if (link.value !== "=" && link.value !== "IN") continue;
+
     const source = readVariablePath(t, 3, constants)?.segments ?? [];
     out.set(alias.value, {
       name: alias.value,
       source: source.length ? source : null,
       isLoop: true,
       origin: `FOREACH ${alias.value} ${link.value} ${source.join(".")}`,
-    });
-  }
-
-  // Assignments earlier in the document, and block-local names.
-  for (const directive of result.directives) {
-    if (directive.start >= offset) continue;
-    const t = directive.tokens;
-    const offsetIndex = directive.keyword === "SET" ? 1 : 0;
-    const name = t[offsetIndex];
-    const eq = t[offsetIndex + 1];
-    if (!name || name.kind !== "ident" || !eq || eq.value !== "=") continue;
-    if (out.has(name.value)) continue;
-    const source = readVariablePath(t, offsetIndex + 2, constants)?.segments ?? [];
-    out.set(name.value, {
-      name: name.value,
-      source: source.length > 1 ? source : null,
-      isLoop: false,
-      origin: `${name.value} = ${source.join(".") || "…"}`,
     });
   }
 

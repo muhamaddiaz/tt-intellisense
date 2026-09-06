@@ -60,7 +60,7 @@ test("IF/ELSE folds per branch", () => {
 
 test("symbols are hierarchical and named", () => {
   const src = "[% FOREACH d IN dirs %]\n[% IF d.x %]\na\n[% END %]\n[% END %]";
-  const syms = toDocumentSymbols(src, parse(src), positionAtFor(src));
+  const syms = toDocumentSymbols(parse(src), positionAtFor(src));
   assert.equal(syms.length, 1);
   assert.match(syms[0].name, /^FOREACH d IN dirs$/);
   assert.equal(syms[0].children.length, 1);
@@ -69,7 +69,7 @@ test("symbols are hierarchical and named", () => {
 
 test("a BLOCK symbol is named after the block", () => {
   const src = "[% BLOCK price_row %]\nx\n[% END %]";
-  const [sym] = toDocumentSymbols(src, parse(src), positionAtFor(src));
+  const [sym] = toDocumentSymbols(parse(src), positionAtFor(src));
   assert.equal(sym.name, "price_row");
   // The selection range must sit inside the full range.
   assert.ok(sym.selectionRange.start.line >= sym.range.start.line);
@@ -78,13 +78,13 @@ test("a BLOCK symbol is named after the block", () => {
 
 test("long symbol labels are truncated", () => {
   const src = `[% IF ${"a.very.long.path".repeat(8)} %]\nx\n[% END %]`;
-  const [sym] = toDocumentSymbols(src, parse(src), positionAtFor(src));
+  const [sym] = toDocumentSymbols(parse(src), positionAtFor(src));
   assert.ok(sym.name.length <= 61, `label not truncated: ${sym.name.length}`);
 });
 
 test("real fixture produces a usable outline", () => {
   const src = readFileSync(join(root, "test-file-1.tt"), "utf8");
-  const syms = toDocumentSymbols(src, parse(src), positionAtFor(src));
+  const syms = toDocumentSymbols(parse(src), positionAtFor(src));
   assert.ok(syms.length > 0);
   const depth = (s) => 1 + Math.max(0, ...s.children.map(depth));
   assert.ok(Math.max(...syms.map(depth)) >= 3, "outline is flat; expected nesting");

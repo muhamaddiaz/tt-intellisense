@@ -62,7 +62,7 @@ export function toFoldingRanges(result: ParseResult, positionAt: PositionAt): Fo
 }
 
 /** A short, readable label for a block, for the outline view. */
-function labelFor(text: string, block: ParsedBlock): string {
+function labelFor(block: ParsedBlock): string {
   if (block.name) return block.name;
 
   const args = block.opener.tokens
@@ -105,7 +105,6 @@ function kindFor(block: ParsedBlock): SymbolKind {
  * 130 KB, so structure navigation is worth more than a flat list of names.
  */
 export function toDocumentSymbols(
-  text: string,
   result: ParseResult,
   positionAt: PositionAt
 ): DocumentSymbol[] {
@@ -117,7 +116,7 @@ export function toDocumentSymbols(
         : { start: positionAt(block.opener.start), end: positionAt(block.opener.end) };
 
     return {
-      name: labelFor(text, block),
+      name: labelFor(block),
       kind: kindFor(block),
       range,
       // The selection range must sit inside the full range or clients complain.

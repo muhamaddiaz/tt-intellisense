@@ -196,3 +196,44 @@ test("hover says an unknown path is not necessarily a mistake", () => {
 test("hover returns nothing outside a directive", () => {
   assert.equal(hoverAt("<div cl|ass='x'></div>"), null);
 });
+
+// ------------------------------------------------------- scope correctness
+// Regressions for defects found in review.
+
+test("a later assignment shadows an earlier one", () => {
+  const text = "[% x = ir.first %][% x = ir.second %][% x.y %]";
+  const scope = c.scopeAt(parse(text), text.length - 6);
+  assert.deepEqual(scope.get("x")?.source, ["ir", "second"]);
+});
+
+test("an assignment sealed in a closed block is not visible after it", () => {
+  const text = "[% FOREACH r IN ir.rows %][% tmp = ir.deep %][% END %][% tmp.y %]";
+  assert.equal(c.scopeAt(parse(text), text.length - 4).has("tmp"), false);
+});
+
+test("an assignment is still visible inside its own block", () => {
+  const text = "[% FOREACH r IN ir.rows %][% tmp = ir.deep %][% tmp.y %][% END %]";
+  assert.equal(c.scopeAt(parse(text), text.indexOf("tmp.y") + 1).has("tmp"), true);
+});
+
+test("a loop alias beats an assignment of the same name", () => {
+  const text = "[% x = ir.one %][% FOREACH x IN ir.rows %][% x.y %][% END %]";
+  assert.equal(c.scopeAt(parse(text), text.indexOf("x.y") + 1).get("x")?.isLoop, true);
+});
+
+test("a nested loop shadows the outer alias in scopeAt", () => {
+  const text = "[% FOREACH d IN ir.a %][% FOREACH d IN ir.b %][% d.x %][% END %][% END %]";
+  const scope = c.scopeAt(parse(text), text.indexOf("d.x") + 1);
+  assert.deepEqual(scope.get("d")?.source, ["ir", "b"]);
+});
+
+test("the cursor immediately after [% is inside the directive", () => {
+  const text = "[%";
+  assert.equal(c.completionContext(text, 2, parse(text)).inDirective, true);
+});
+
+test("the cursor before [% is still outside it", () => {
+  const text = "x[% a %]";
+  assert.equal(c.completionContext(text, 0, parse(text)).inDirective, false);
+  assert.equal(c.completionContext(text, 1, parse(text)).inDirective, false);
+});

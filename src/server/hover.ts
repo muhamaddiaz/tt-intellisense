@@ -56,8 +56,9 @@ export function pathAt(
     if (!read) continue;
     const last = directive.tokens[Math.max(i, read.next - 1)]!;
     if (offset >= token.start && offset <= last.end) {
-      const path = read.endedInCall ? read.segments : read.segments;
-      return { path, start: token.start, end: last.end };
+      // `readVariablePath` already stops before a method name, so the segments
+      // are the receiver path whether or not the path ended in a call.
+      return { path: read.segments, start: token.start, end: last.end };
     }
     i = Math.max(i, read.next - 1);
   }

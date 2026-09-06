@@ -66,6 +66,24 @@ export class SchemaStore {
     this.options = options;
   }
 
+  /**
+   * Applies new options. Returns true when they differ from the current ones,
+   * so the caller knows whether a rebuild is actually needed.
+   */
+  configure(options: Partial<StoreOptions>): boolean {
+    const next = { ...this.options, ...options };
+    const changed = (Object.keys(next) as Array<keyof StoreOptions>).some(
+      (k) => next[k] !== this.options[k]
+    );
+    this.options = next;
+    return changed;
+  }
+
+  /** The directory dumps are read from, for messages to the user. */
+  get dumpDirectory(): string {
+    return this.options.dumpDirectory;
+  }
+
   get schema(): SchemaNode {
     return this.combined;
   }

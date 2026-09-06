@@ -106,6 +106,11 @@ from three layers, in increasing precedence — see
 3. **Curated** `tt-schema.json`, mapping dotted paths to `description` and
    `type`.
 
+Both locations are configurable — `ttIntellisense.schema.dumpDirectory` and
+`ttIntellisense.schema.curatedFile`. Templates, dumps and the curated file are
+watched, so adding a dump or pulling new templates updates completion without
+restarting the server.
+
 Paths rooted at a loop alias resolve through the list being iterated, so inside
 
 ```tt

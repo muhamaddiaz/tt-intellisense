@@ -258,3 +258,37 @@ test("the real dump is parsed when present, and its secrets stay hidden", { skip
     assert.equal(lookup(r, keys)?.value, REDACTED, keys.join("."));
   }
 });
+
+// ----------------------------------------------------- store configuration
+// Regression: these settings were declared but never applied.
+
+test("configure reports whether options actually changed", () => {
+  const s = new SchemaStore();
+  assert.equal(s.configure({ dumpDirectory: ".tt-schema" }), false, "no-op reported as a change");
+  assert.equal(s.configure({ dumpDirectory: "dumps" }), true);
+  assert.equal(s.dumpDirectory, "dumps");
+});
+
+test("a configured dump directory is the one actually read", () => {
+  const d = mkdtempSync(join(tmpdir(), "tt-cfg-"));
+  mkdirSync(join(d, "dumps"), { recursive: true });
+  writeFileSync(join(d, "dumps", "a.txt"), "ir\n`- configured = yes\n");
+  mkdirSync(join(d, ".tt-schema"), { recursive: true });
+  writeFileSync(join(d, ".tt-schema", "b.txt"), "ir\n`- default = yes\n");
+
+  const s = new SchemaStore();
+  s.configure({ dumpDirectory: "dumps" });
+  s.build([d]);
+
+  assert.ok(lookup(s.schema, ["ir", "configured"]), "configured directory was not read");
+  assert.ok(!lookup(s.schema, ["ir", "default"]), "default directory was read despite config");
+});
+
+test("a configured curated file is the one actually read", () => {
+  const d = mkdtempSync(join(tmpdir(), "tt-cfg2-"));
+  writeFileSync(join(d, "custom.json"), JSON.stringify({ "a.b": { description: "From custom." } }));
+  const s = new SchemaStore();
+  s.configure({ curatedFile: "custom.json" });
+  s.build([d]);
+  assert.equal(lookup(s.schema, ["a", "b"])?.description, "From custom.");
+});

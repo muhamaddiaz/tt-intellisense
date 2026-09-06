@@ -11,7 +11,6 @@
  */
 import {
   Position,
-  Range,
   SnippetString,
   window,
   workspace,
@@ -90,9 +89,4 @@ export function activateTagClosing(provider: TagCompletionProvider): Disposable 
       for (const d of disposables) d.dispose();
     },
   };
-}
-
-/** Kept for symmetry with the range form VS Code's HTML extension uses. */
-export function rangeAt(position: Position): Range {
-  return new Range(position, position);
 }
