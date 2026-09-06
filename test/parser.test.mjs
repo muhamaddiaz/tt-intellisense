@@ -214,3 +214,33 @@ test("corpus: known-good templates produce no diagnostics", { skip: !CORPUS }, (
   console.log(`  corpus: ${files.length} files, ${directives} directives, ${blocks} blocks`);
   assert.deepEqual(problems.slice(0, 15), []);
 });
+
+// ---------------------------------------------------------------- line endings
+// Windows checkouts use CRLF. Everything positional must behave identically,
+// or ranges land one character out on every line after the first.
+
+test("CRLF documents parse identically to LF", () => {
+  const lf = readFileSync(join(root, "test-file-1.tt"), "utf8");
+  const crlf = lf.replace(/\n/g, "\r\n");
+  const a = parse(lf);
+  const b = parse(crlf);
+  assert.equal(b.allBlocks.length, a.allBlocks.length);
+  assert.equal(b.directives.length, a.directives.length);
+  assert.deepEqual(b.diagnostics, []);
+  assert.equal(templateRefs(b).length, templateRefs(a).length);
+});
+
+test("a multi-line tag broken by CRLF is fine", () => {
+  assert.deepEqual(parse("[% IF a\r\n%]x[% END\r\n%]").diagnostics, []);
+});
+
+test("outline tags are recognised after CRLF", () => {
+  const r = parse("a\r\n%% IF x\r\n%% END\r\n");
+  assert.equal(r.tags.filter((t) => t.kind === "outline").length, 2);
+});
+
+test("template ref ranges are exact in a CRLF document", () => {
+  const src = "<div>\r\n[% INCLUDE include_header.tt %]\r\n</div>";
+  const [ref] = templateRefs(parse(src));
+  assert.equal(src.slice(ref.start, ref.end), "include_header.tt");
+});

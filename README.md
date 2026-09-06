@@ -16,37 +16,73 @@ variables your Perl app passes in are invisible. This fixes that.
 | **Colours** | HTML dies at the first `[%` | HTML, CSS, JS and TT each coloured properly — including TT inside `class="…"` |
 | **Variables** | grep other templates to recall `ir.var.…` | type `ir.` and pick from a list; hover shows the value |
 | **Loops** | `director.` means nothing | `director.` offers `name`, `designation`, `url_image` |
-| **Includes** | copy the filename, then search for it | Cmd+click `include_header.tt` and you're there |
+| **Includes** | copy the filename, then search for it | Ctrl+click `include_header.tt` and you're there |
 | **Typos** | found when Perl renders it | red squiggle on the unbalanced `END`, while you type |
 | **HTML** | no tag completion, no Emmet | tag/attribute completion, Emmet, auto-closing tags |
-| **Big files** | endless scrolling | fold blocks, jump via the outline (`Cmd+Shift+O`) |
+| **Big files** | endless scrolling | fold blocks, jump via the outline (`Ctrl+Shift+O`, `Cmd+Shift+O` on macOS) |
 
 ---
 
 ## Install
 
-There is no marketplace listing yet, so install the `.vsix` directly.
+There is no marketplace listing yet, so install the `.vsix` directly. Node.js 18
+or newer is the only prerequisite.
 
-**1. Build it** (skip if you were handed a `.vsix`):
+Throughout this file, keyboard shortcuts are written for Windows and Linux.
+On macOS use `Cmd` wherever `Ctrl` appears.
+
+### 1. Build it
+
+Skip this if someone handed you a `.vsix`.
+
+**Windows** — PowerShell or Command Prompt, from the project folder:
+
+```powershell
+npm install
+npm run package
+```
+
+**macOS and Linux:**
 
 ```bash
 npm install
 npm run package
 ```
 
-Produces `tt-intellisense-0.1.0.vsix` in the project root.
+Either way you get `tt-intellisense-0.1.0.vsix` in the project root.
 
-**2. Install it** — in the editor, `Cmd+Shift+P` → **Extensions: Install from
-VSIX** → pick the file. Or from a terminal:
+> On Windows, `npm` scripts run through `cmd.exe` by default. If PowerShell
+> blocks `npm.ps1` with a script-execution error, run
+> `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`, or just use Command
+> Prompt instead.
 
-```bash
-cursor --install-extension tt-intellisense-0.1.0.vsix
+### 2. Install it
+
+From the editor, on any platform:
+
+`Ctrl+Shift+P` → **Extensions: Install from VSIX…** → pick the file.
+
+Or from a terminal:
+
+```powershell
+# Windows
+cursor --install-extension .\tt-intellisense-0.1.0.vsix
 ```
 
-Use `code` instead of `cursor` on VS Code. If neither command exists, add it via
-`Cmd+Shift+P` → **Shell Command: Install … command in PATH**.
+```bash
+# macOS and Linux
+cursor --install-extension ./tt-intellisense-0.1.0.vsix
+```
 
-**3. Reload the window** when prompted.
+Use `code` instead of `cursor` on VS Code. If neither command is found, add it
+from the editor: `Ctrl+Shift+P` → **Shell Command: Install … command in PATH**.
+On Windows, VS Code and Cursor normally add themselves to `PATH` at install
+time; if not, reinstall with the *Add to PATH* option ticked, then open a new
+terminal.
+
+### 3. Reload the window
+
+`Ctrl+Shift+P` → **Developer: Reload Window**, or accept the prompt.
 
 ### Check it worked
 
@@ -54,7 +90,11 @@ Open any `.tt` file. The status bar, bottom right, should read **Template
 Toolkit**. If it says Plain Text, the extension did not activate — click it and
 choose Template Toolkit.
 
-Then try: type `[% ir.` and a completion list should appear.
+Then type `[% ir.` and a completion list should appear.
+
+> **Line endings.** CRLF checkouts work exactly like LF ones — parsing,
+> diagnostics and every position are identical either way, and this is covered
+> by tests. You do not need to change `core.autocrlf`.
 
 ---
 
@@ -112,11 +152,21 @@ dump in each. Point the setting at a single location instead — absolute paths
 and `~` are both honoured:
 
 ```jsonc
-// User settings, applies everywhere
+// User settings — applies to every project
 "ttIntellisense.schema.dumpDirectory": "~/.tt-schema"
 ```
 
-Or read a shared dump *and* a project-local one, merged together:
+`~` means your home folder on every platform, including Windows, where it
+resolves to `C:\Users\<you>`. An explicit Windows path works too — use forward
+slashes, or escape the backslashes, since this is JSON:
+
+```jsonc
+"ttIntellisense.schema.dumpDirectory": "C:/Users/you/.tt-schema"
+// or
+"ttIntellisense.schema.dumpDirectory": "C:\\Users\\you\\.tt-schema"
+```
+
+Read a shared dump *and* a project-local one by giving a list:
 
 ```jsonc
 "ttIntellisense.schema.dumpDirectory": ["~/.tt-schema", ".tt-schema"]
@@ -126,8 +176,23 @@ Relative entries resolve against each workspace folder; absolute ones are used
 as given and read once however many folders are open. `curatedFile` works the
 same way.
 
-Keeping the shared dump outside any repository is worth doing on its own: a file
-that lives in `~` cannot be committed by accident.
+To set the shared folder up:
+
+```powershell
+# Windows
+mkdir "$HOME\.tt-schema"
+copy path\to\schema.txt "$HOME\.tt-schema\"
+```
+
+```bash
+# macOS and Linux
+mkdir -p ~/.tt-schema
+cp path/to/schema.txt ~/.tt-schema/
+```
+
+Keeping the shared dump outside every repository is worth doing for its own
+sake, not just for convenience: a file in your home folder cannot be committed
+by accident.
 
 **JSON is preferred**, because it states outright which fields are lists. The
 ASCII tree format your Perl side already produces is also read.
@@ -164,8 +229,8 @@ without restarting.
 
 ### Navigation
 
-Cmd+click or **Go to Definition** on an `INCLUDE`, `PROCESS`, `INSERT` or
-`WRAPPER` target. Resolution tries the current file's own directory first, then
+Ctrl+click — Cmd+click on macOS — or **Go to Definition** (`F12`) on an
+`INCLUDE`, `PROCESS`, `INSERT` or `WRAPPER` target. Resolution tries the current file's own directory first, then
 anything in `ttIntellisense.includePath`. A `BLOCK` defined in the same file
 wins over a file on disk, matching Template Toolkit; blocks in other files are
 found through a workspace index that prefers the nearest copy.
@@ -225,11 +290,23 @@ how many dump paths and templates it indexed.
 **A variable I know exists is missing.** Expected — no source is complete. Add a
 dump from a page that uses it, or describe it in `tt-schema.json`.
 
-**Cmd+click does nothing on an include.** The file is not on disk relative to
+**Ctrl+click does nothing on an include.** The file is not on disk relative to
 this one. Add its directory to `ttIntellisense.includePath`.
 
 **Reinstalling a `.vsix` seems to do nothing.** Same version number. Uninstall
 first, or bump `version` in `package.json`.
+
+**Windows: `npm run package` fails with a script-execution error.** PowerShell
+is blocking `npm.ps1`. Either run
+`Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`, or use Command Prompt.
+
+**Windows: `cursor` or `code` is not recognised.** The editor is not on `PATH`.
+Install from VSIX through the command palette instead, or reinstall the editor
+with the *Add to PATH* option ticked and open a new terminal.
+
+**Windows: a configured path is ignored.** In JSON a single backslash is an
+escape character, so `"C:\Users\you"` is not the path you meant. Use forward
+slashes, double the backslashes, or just write `~`.
 
 ### Known limitation
 
@@ -242,10 +319,12 @@ after it will be misread.
 
 ```bash
 npm install
-npm test          # 210 tests
+npm test          # 222 tests
 npm run build     # compile only
 npm run package   # build the .vsix
 ```
+
+The same commands work on Windows, macOS and Linux.
 
 Grammar correctness is checked headlessly, so no editor is needed to run the
 suite. Upstream HTML/CSS/JS grammars are fetched into `test/fixtures/grammars/`
@@ -254,7 +333,13 @@ on first run and are not committed.
 To run the parser and grammar over a real tree of templates:
 
 ```bash
+# macOS and Linux
 TT_CORPUS=/path/to/templates npm test
+```
+
+```powershell
+# Windows PowerShell
+$env:TT_CORPUS="C:\path\to\templates"; npm test
 ```
 
 Against the 289-file reference corpus the parser reports zero diagnostics, which

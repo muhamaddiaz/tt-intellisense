@@ -195,3 +195,13 @@ test("no closing inside style or script", () => {
   assert.equal(tagCompleteAt("<style>a{}>|"), null);
   assert.equal(tagCompleteAt("<script>if (a>|"), null);
 });
+
+test("projections preserve CR as well as LF", () => {
+  const text = "<div>\r\n[% IF x %]\r\na\r\n[% END %]\r\n</div>";
+  const r = parse(text);
+  for (const projected of [e.htmlProjection(text, r), e.cssProjection(text, r)]) {
+    assert.equal(projected.length, text.length);
+    assert.equal((projected.match(/\r/g) ?? []).length, (text.match(/\r/g) ?? []).length);
+    assert.equal(projected.split("\n").length, text.split("\n").length);
+  }
+});
