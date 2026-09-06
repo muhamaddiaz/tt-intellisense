@@ -91,11 +91,33 @@ Grammar correctness is asserted headlessly with `vscode-textmate`, so no editor
 is needed to run the suite. Upstream HTML/CSS/JS grammars are fetched into
 `test/fixtures/grammars/` on `pretest` and are not vendored.
 
-To run the grammar against a real corpus of templates:
+To run the grammar and parser against a real corpus of templates:
 
 ```bash
 TT_CORPUS=/path/to/templates npm test
 ```
+
+## Building the .vsix
+
+```bash
+npm install
+npm run package
+```
+
+That compiles TypeScript (via `vscode:prepublish`) and writes
+`tt-intellisense-<version>.vsix` into the project root. Install it with
+
+```bash
+cursor --install-extension tt-intellisense-0.1.0.vsix
+```
+
+or from the editor: `Cmd+Shift+P` → **Extensions: Install from VSIX**. Reload the
+window afterwards. Reinstalling over the same version number sometimes needs an
+uninstall first, so bump `version` in `package.json` when iterating.
+
+The `--baseContentUrl` flags in the `package` script exist only because this
+repository has no git remote; without them `vsce` refuses to publish a README
+containing relative links. Set `repository` in `package.json` and they can go.
 
 ## Variable completion
 
