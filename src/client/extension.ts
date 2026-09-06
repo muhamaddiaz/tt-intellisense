@@ -1,5 +1,5 @@
 import * as path from "node:path";
-import type { ExtensionContext } from "vscode";
+import type { Disposable, ExtensionContext } from "vscode";
 import {
   LanguageClient,
   TransportKind,
@@ -7,7 +7,10 @@ import {
   type ServerOptions,
 } from "vscode-languageclient/node";
 
+import { activateTagClosing } from "./tag-closing";
+
 let client: LanguageClient | undefined;
+let tagClosing: Disposable | undefined;
 
 export function activate(context: ExtensionContext): void {
   const module = context.asAbsolutePath(path.join("out", "server", "server.js"));
@@ -27,9 +30,19 @@ export function activate(context: ExtensionContext): void {
   };
 
   client = new LanguageClient("ttIntellisense", "TT IntelliSense", serverOptions, clientOptions);
-  void client.start();
+
+  void client.start().then(() => {
+    const active = client;
+    if (!active) return;
+    tagClosing = activateTagClosing((uri, position) =>
+      active.sendRequest<string | null>("tt/tagComplete", { uri, position })
+    );
+    context.subscriptions.push(tagClosing);
+  });
 }
 
 export function deactivate(): Thenable<void> | undefined {
+  tagClosing?.dispose();
+  tagClosing = undefined;
   return client?.stop();
 }

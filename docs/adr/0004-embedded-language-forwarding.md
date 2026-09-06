@@ -45,9 +45,11 @@ Emmet works, because the extension maps `tt` to `html` in
 HTML formatting is unavailable, which is consistent with the decision not to
 ship a formatter at all.
 
-Auto-closing tags are not implemented. The HTML service offers `doTagComplete`
-for this, but it needs a custom on-type request from the client, and it was left
-out of the first version rather than deferred for any deeper reason.
+Auto-closing tags travel as a custom request rather than an LSP capability,
+because the protocol has none for on-type behaviour. The client watches for `>`
+and `/`, asks the server, and inserts the returned snippet. The server refuses
+inside a directive, where `>` is a comparison operator rather than the end of a
+tag.
 
 The two completion sources never mix. They are disjoint by cursor position:
 inside a directive the schema answers, outside it the embedded services do.

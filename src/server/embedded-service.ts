@@ -15,7 +15,7 @@ import { getCSSLanguageService } from "vscode-css-languageservice";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import type { CompletionItem, Hover, Position } from "vscode-languageserver/node";
 
-import { cssProjection, htmlProjection, languageAt } from "./embedded";
+import { cssProjection, htmlProjection, inDirective, languageAt } from "./embedded";
 import type { ParseResult } from "./parser";
 
 const html = getHtmlService();
@@ -78,6 +78,30 @@ export function embeddedCompletion(
   if (languageAt(text, offset) === "javascript") return [];
 
   return html.doComplete(projection.htmlDoc, position, projection.htmlParsed).items;
+}
+
+/**
+ * The closing tag to insert after the user typed `>` or `/`, as a snippet, or
+ * null when nothing should be inserted.
+ *
+ * Returns a snippet string like `$0</div>`. The client places it; there is no
+ * LSP capability for on-type tag closing, so this travels as a custom request.
+ */
+export function tagCompletion(
+  doc: TextDocument,
+  position: Position,
+  result: ParseResult
+): string | null {
+  const text = doc.getText();
+  const offset = doc.offsetAt(position);
+
+  // A `>` inside a directive belongs to TT — a comparison, or the end of an
+  // arrow — and closing an HTML tag there would be nonsense.
+  if (inDirective(offset, result)) return null;
+  if (languageAt(text, offset) !== "html") return null;
+
+  const projection = projectionFor(doc, result);
+  return html.doTagComplete(projection.htmlDoc, position, projection.htmlParsed);
 }
 
 /** Hover from whichever embedded language the cursor is in. */

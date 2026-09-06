@@ -42,7 +42,12 @@ import {
 } from "./complete";
 import { hoverAt } from "./hover";
 import { DEFAULT_STORE_OPTIONS, SchemaStore } from "./schema/store";
-import { embeddedCompletion, embeddedHover, forgetProjection } from "./embedded-service";
+import {
+  embeddedCompletion,
+  embeddedHover,
+  forgetProjection,
+  tagCompletion,
+} from "./embedded-service";
 
 const connection = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments(TextDocument);
@@ -341,6 +346,22 @@ connection.onHover((params): Hover | null => {
     range: rangeOf(doc, info.start, info.end),
   };
 });
+
+/**
+ * On-type closing-tag completion.
+ *
+ * There is no LSP capability for this, so the client watches for `>` and `/`
+ * and asks here. The reply is a snippet for the client to insert, or null.
+ */
+connection.onRequest(
+  "tt/tagComplete",
+  (params: { uri: string; position: { line: number; character: number } }) => {
+    if (!embeddedEnabled) return null;
+    const doc = documents.get(params.uri);
+    if (!doc) return null;
+    return tagCompletion(doc, params.position, parsed(doc));
+  }
+);
 
 documents.listen(connection);
 connection.listen();

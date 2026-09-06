@@ -45,7 +45,10 @@ Diagnostics are never forwarded, and JavaScript is not forwarded at all — see
 does not project to well-formed HTML, so HTML diagnostics would be reliably
 wrong on correct templates.
 
-Turn forwarding off with `ttIntellisense.embedded.enabled`.
+Typing `>` or `/` inserts the matching closing tag. It never fires inside a
+directive, where `>` is a comparison operator. Turn it off with
+`ttIntellisense.autoClosingTags`, and forwarding as a whole with
+`ttIntellisense.embedded.enabled`.
 
 ## Diagnostics
 

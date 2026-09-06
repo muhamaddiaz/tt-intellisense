@@ -151,3 +151,47 @@ test("corpus: projections preserve length, newlines and all TT is removed", { sk
   assert.deepEqual(problems.slice(0, 10), []);
   console.log(`  corpus: ${files.length} projections clean`);
 });
+
+// ------------------------------------------------------- closing-tag completion
+
+/** The snippet the server would return for a `>` or `/` typed at the cursor. */
+function tagCompleteAt(src) {
+  const offset = src.indexOf("|");
+  const text = src.slice(0, offset) + src.slice(offset + 1);
+  const d = doc(text);
+  return svc.tagCompletion(d, d.positionAt(offset), parse(text));
+}
+
+test("typing > closes the element", () => {
+  assert.equal(tagCompleteAt("<div>|"), "$0</div>");
+  assert.equal(tagCompleteAt("<div><span>|"), "$0</span>");
+});
+
+test("void elements are not closed", () => {
+  assert.equal(tagCompleteAt("<br>|"), null);
+  assert.equal(tagCompleteAt('<img src="x">|'), null);
+});
+
+test("typing </ completes the closing tag", () => {
+  assert.equal(tagCompleteAt("<div></|"), "div>");
+});
+
+test("closing works across a blanked directive", () => {
+  assert.equal(tagCompleteAt("<div>[% IF a %]<span>|"), "$0</span>");
+});
+
+test("an element whose attribute holds TT still closes", () => {
+  assert.equal(tagCompleteAt('<div id="[% director.id %]">|'), "$0</div>");
+});
+
+// The important guard: `>` is a comparison operator in TT.
+test("a > inside a directive never closes a tag", () => {
+  assert.equal(tagCompleteAt("[% x > |"), null);
+  assert.equal(tagCompleteAt("[% IF a.count > |"), null);
+  assert.equal(tagCompleteAt("[% x => |"), null);
+});
+
+test("no closing inside style or script", () => {
+  assert.equal(tagCompleteAt("<style>a{}>|"), null);
+  assert.equal(tagCompleteAt("<script>if (a>|"), null);
+});
