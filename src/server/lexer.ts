@@ -241,7 +241,10 @@ export function lexTokens(text: string, bodyStart: number, bodyEnd: number): Tok
         while (k < bodyEnd && text[k] !== "}") k++;
         k = Math.min(k + 1, bodyEnd);
       } else {
-        while (k < bodyEnd && (IDENT_PART.test(text[k]!) || text[k] === ".")) k++;
+        // Stops at `.`: in a directive `$board_type.format` is a dynamic path
+        // segment followed by a field access, not one long name. Interpolation
+        // inside strings is handled by the string token itself.
+        while (k < bodyEnd && IDENT_PART.test(text[k]!)) k++;
       }
       push("dollar", i, k);
       i = k;

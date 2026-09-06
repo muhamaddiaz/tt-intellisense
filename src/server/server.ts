@@ -6,16 +6,20 @@
  * Completion and hover arrive with M4.
  */
 import {
+  CompletionItemKind,
   DidChangeConfigurationNotification,
   DocumentLink,
   Location,
+  MarkupKind,
   ProposedFeatures,
   Range,
   TextDocumentSyncKind,
   TextDocuments,
   createConnection,
+  type CompletionItem,
   type DocumentSymbol,
   type FoldingRange,
+  type Hover,
   type InitializeParams,
   type InitializeResult,
 } from "vscode-languageserver/node";
@@ -27,10 +31,22 @@ import { parse, templateRefs, type ParseResult } from "./parser";
 import { toDiagnostics, toDocumentSymbols, toFoldingRanges } from "./features";
 import { absoluteRoots, resolveTemplate } from "./resolve";
 import { BlockIndex } from "./workspace";
+import {
+  completionContext,
+  keywordSuggestions,
+  localSuggestions,
+  memberSuggestions,
+  resolvePath,
+  scopeAt,
+  type Suggestion,
+} from "./complete";
+import { hoverAt } from "./hover";
+import { DEFAULT_STORE_OPTIONS, SchemaStore } from "./schema/store";
 
 const connection = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments(TextDocument);
 const index = new BlockIndex();
+const schema = new SchemaStore();
 
 let workspaceDirs: string[] = [];
 let configuredRoots: string[] = [];
@@ -80,6 +96,8 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
       definitionProvider: true,
       foldingRangeProvider: true,
       documentSymbolProvider: true,
+      hoverProvider: true,
+      completionProvider: { triggerCharacters: [".", "%", " "], resolveProvider: false },
     },
   };
 });
@@ -95,6 +113,25 @@ connection.onInitialized(() => {
     connection.console.info(
       `TT: indexed ${index.size} block names across ${index.fileCount} files`
     );
+
+    schema.build(workspaceDirs);
+    const r = schema.report;
+    connection.console.info(
+      `TT: schema from ${r.dumpFiles} dump(s) (${r.dumpPaths} paths), ` +
+        `${r.minedFiles} mined template(s)` +
+        (r.curated ? ", curated overrides loaded" : "")
+    );
+
+    // A dump captured from a real render can carry credentials. Values are
+    // redacted on display regardless, but a file like this must not be
+    // committed, and its author may not know what ended up in it.
+    if (r.dumpsWithSecrets.length) {
+      const names = r.dumpsWithSecrets.join(", ");
+      connection.window.showWarningMessage(
+        `TT IntelliSense: ${names} appears to contain credentials. ` +
+          `Values are hidden in hover, but keep ${DEFAULT_STORE_OPTIONS.dumpDirectory}/ out of version control.`
+      );
+    }
   }, 0);
 });
 
@@ -133,10 +170,12 @@ documents.onDidChangeContent((e) => {
   // Keep the index current for the file being edited, so a block just renamed
   // is findable from other files without a save.
   if (path) index.setFile(path, e.document.getText());
+  schema.updateDocument(e.document.uri, e.document.getText());
 });
 
 documents.onDidClose((e) => {
   cache.delete(e.document.uri);
+  schema.closeDocument(e.document.uri);
   void connection.sendDiagnostics({ uri: e.document.uri, diagnostics: [] });
 });
 
@@ -226,6 +265,64 @@ function offsetsToRange(file: string, start: number, end: number): Range {
     return { start: zero, end: zero };
   }
 }
+
+const SUGGESTION_KIND: Record<Suggestion["kind"], CompletionItemKind> = {
+  variable: CompletionItemKind.Variable,
+  field: CompletionItemKind.Field,
+  local: CompletionItemKind.Variable,
+  keyword: CompletionItemKind.Keyword,
+};
+
+connection.onCompletion((params): CompletionItem[] => {
+  const doc = documents.get(params.textDocument.uri);
+  if (!doc) return [];
+
+  const text = doc.getText();
+  const offset = doc.offsetAt(params.position);
+  const result = parsed(doc);
+
+  const context = completionContext(text, offset, result);
+  if (!context.inDirective) return [];
+
+  const scope = scopeAt(result, offset);
+  let suggestions: Suggestion[];
+
+  if (context.base.length === 0) {
+    suggestions = [
+      ...localSuggestions(scope),
+      ...memberSuggestions(schema.schema, (r) => schema.documentFrequency(r), true),
+    ];
+    if (context.atDirectiveHead) {
+      suggestions = [...keywordSuggestions(context.partial), ...suggestions];
+    }
+  } else {
+    const parent = resolvePath(context.base, schema.schema, scope);
+    suggestions = parent ? memberSuggestions(parent, () => 0, false) : [];
+  }
+
+  return suggestions.map((s, i) => ({
+    label: s.label,
+    kind: SUGGESTION_KIND[s.kind],
+    detail: s.detail,
+    documentation: s.documentation,
+    // Rank is carried in sortText so the client keeps our ordering: `ir` and
+    // `global` first, the long mined tail last but still reachable.
+    sortText: `${String(s.rank).padStart(5, "0")}${String(i).padStart(5, "0")}`,
+  }));
+});
+
+connection.onHover((params): Hover | null => {
+  const doc = documents.get(params.textDocument.uri);
+  if (!doc) return null;
+
+  const info = hoverAt(doc.getText(), doc.offsetAt(params.position), parsed(doc), schema.schema);
+  if (!info) return null;
+
+  return {
+    contents: { kind: MarkupKind.Markdown, value: info.markdown },
+    range: rangeOf(doc, info.start, info.end),
+  };
+});
 
 documents.listen(connection);
 connection.listen();

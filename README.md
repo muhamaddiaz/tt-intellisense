@@ -13,7 +13,7 @@ Targets VS Code and forks (Cursor, VSCodium). Distributed as a `.vsix`.
 | M1 — language registration + grammar | done |
 | M2 — INCLUDE / BLOCK navigation | done |
 | M3 — parser, structural diagnostics, folding, symbols | done |
-| M4 — schema layers, completion, hover | not started |
+| M4 — schema layers, completion, hover | done |
 
 ## Navigation coverage
 
@@ -73,11 +73,43 @@ To run the grammar against a real corpus of templates:
 TT_CORPUS=/path/to/templates npm test
 ```
 
-## Stash dumps
+## Variable completion
 
-Completion for ambient variables (`ir.*`, `global.*`) is fed by runtime stash
-dumps placed in `.tt-schema/`. That directory is gitignored: dumps capture real
-values from real renders and routinely contain credentials. Never commit one.
+Completion and hover for ambient variables (`ir.*`, `global.*`) are answered
+from three layers, in increasing precedence — see
+[ADR 0001](docs/adr/0001-layered-schema-model.md):
+
+1. **Mined** from the workspace's own templates. Needs no configuration and
+   covers what dumps miss.
+2. **Stash dumps** in `.tt-schema/`, unioned across files. JSON is preferred;
+   the ASCII tree format the Perl side produces is also parsed, including
+   recovering arrays from consecutive numeric keys.
+3. **Curated** `tt-schema.json`, mapping dotted paths to `description` and
+   `type`.
+
+Paths rooted at a loop alias resolve through the list being iterated, so inside
+
+```tt
+[% FOREACH director = ir.var.ir_Directors.$board_type.format.directors %]
+```
+
+typing `director.` offers the fields of an item. A literal assigned earlier is
+folded into a `$dynamic` segment, which is how the path above resolves at all.
+
+Mining alone recovers list shapes from usage. In the reference corpus it finds
+24 lists with learned element shapes, plus `global.*`, `ir.path.*` and several
+`ir.var.*` plugins that the available dump does not contain.
+
+## Stash dumps and secrets
+
+`.tt-schema/` is gitignored, and it must stay that way. Dumps capture real
+values from real renders and routinely contain credentials — the dump this
+project was built against carried live reCAPTCHA secrets.
+
+Values whose key looks secret-bearing are redacted before they reach the schema,
+so no consumer can display them. Redaction is decided by key name, never by
+inspecting the value. The server also warns on startup when a dump appears to
+hold credentials.
 
 ## Formatting
 

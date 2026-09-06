@@ -60,6 +60,16 @@
           "type": "boolean",
           "default": true,
           "markdownDescription": "Report structural problems: unbalanced `END`, unclosed blocks, unterminated tags, misplaced `ELSE`/`CASE`/`CATCH`, and mistyped directive keywords."
+        },
+        "ttIntellisense.schema.dumpDirectory": {
+          "type": "string",
+          "default": ".tt-schema",
+          "markdownDescription": "Directory holding runtime stash dumps, relative to each workspace folder. JSON dumps are preferred because they express lists; the ASCII tree format is also accepted. **Keep this directory out of version control** \u2014 dumps capture real values from real renders and routinely contain credentials."
+        },
+        "ttIntellisense.schema.curatedFile": {
+          "type": "string",
+          "default": "tt-schema.json",
+          "markdownDescription": "Curated schema file, relative to each workspace folder. Maps dotted paths to `description` and `type`, overriding what dumps and mining supply."
         }
       }
     }
