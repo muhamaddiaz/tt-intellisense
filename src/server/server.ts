@@ -50,6 +50,7 @@ import {
   forgetProjection,
   tagCompletion,
 } from "./embedded-service";
+import { commentContextAt, toggleComment } from "./comment";
 
 const connection = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments(TextDocument);
@@ -426,6 +427,46 @@ connection.onRequest(
     const doc = documents.get(params.uri);
     if (!doc) return null;
     return tagCompletion(doc, params.position, parsed(doc));
+  }
+);
+
+/**
+ * Context-aware comment toggling.
+ *
+ * The whole operation is computed here rather than described to the editor,
+ * because commenting a directive means rewriting `[%` into `[%#` — something no
+ * `comments` configuration can express. The client applies what it is given.
+ */
+connection.onRequest(
+  "tt/toggleComment",
+  (params: {
+    uri: string;
+    selections: Array<{ start: { line: number; character: number }; end: { line: number; character: number } }>;
+  }) => {
+    const doc = documents.get(params.uri);
+    if (!doc) return null;
+
+    const text = doc.getText();
+    const result = parsed(doc);
+    const offsets = params.selections.map((s) => ({
+      start: doc.offsetAt(s.start),
+      end: doc.offsetAt(s.end),
+    }));
+
+    return toggleComment(text, result, offsets).map((edit: { start: number; end: number; newText: string }) => ({
+      range: rangeOf(doc, edit.start, edit.end),
+      newText: edit.newText,
+    }));
+  }
+);
+
+/** Reports which language governs a position, for the status bar or debugging. */
+connection.onRequest(
+  "tt/commentContext",
+  (params: { uri: string; position: { line: number; character: number } }) => {
+    const doc = documents.get(params.uri);
+    if (!doc) return null;
+    return commentContextAt(doc.getText(), doc.offsetAt(params.position), parsed(doc));
   }
 );
 

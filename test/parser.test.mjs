@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import p from "../out/server/parser.js";
@@ -160,15 +160,19 @@ test("refs are not found in comments or strings", () => {
 
 // ---------------------------------------------------------------- fixtures
 
-test("both fixtures parse without diagnostics", () => {
+// The files at the repo root are scratch pads, edited freely while working.
+// This only checks they are still valid TT; nothing asserts their contents.
+test("the scratch files at the repo root parse without diagnostics", () => {
   for (const f of ["test-file-1.tt", "test-file-2.tt"]) {
-    const r = parse(readFileSync(join(root, f), "utf8"));
+    const path = join(root, f);
+    if (!existsSync(path)) continue;
+    const r = parse(readFileSync(path, "utf8"));
     assert.deepEqual(r.diagnostics.map((d) => `${d.code}: ${d.message}`), [], f);
   }
 });
 
 test("second fixture yields the expected blocks and refs", () => {
-  const r = parse(readFileSync(join(root, "test-file-2.tt"), "utf8"));
+  const r = parse(readFileSync(join(root, "test", "fixtures", "constructs.tt"), "utf8"));
   const names = r.allBlocks.filter((b) => b.keyword === "BLOCK").map((b) => b.name);
   assert.ok(names.includes("price_row"));
   // `MACRO money(n) GET ...` has no BLOCK keyword, so it is a statement, not a
@@ -220,7 +224,7 @@ test("corpus: known-good templates produce no diagnostics", { skip: !CORPUS }, (
 // or ranges land one character out on every line after the first.
 
 test("CRLF documents parse identically to LF", () => {
-  const lf = readFileSync(join(root, "test-file-1.tt"), "utf8");
+  const lf = readFileSync(join(root, "test", "fixtures", "directors.tt"), "utf8");
   const crlf = lf.replace(/\n/g, "\r\n");
   const a = parse(lf);
   const b = parse(crlf);

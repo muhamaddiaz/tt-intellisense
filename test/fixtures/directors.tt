@@ -1,0 +1,132 @@
+[%# Version 0.5 %]
+[% page_name = "BOC and BOD" %]
+[% INCLUDE include_header.tt %]
+<div class="page-submenu submenu-ir section-profile-boc-bod section-tab subpage-top-decor sub-text modal-popup">
+  <div class="container">
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="boc-profile-tab" data-bs-toggle="tab" data-bs-target="#boc-profile" type="button" role="tab" aria-controls="boc-profile" aria-selected="true" data-mh="boc-bod-tab">[% IF global.is_en %]Board of Commissioners Profile[% ELSE %]Profil Dewan Komisaris[% END %]</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="bod-profile-tab" data-bs-toggle="tab" data-bs-target="#bod-profile" type="button" role="tab" aria-controls="bod-profile" aria-selected="false" data-mh="boc-bod-tab">[% IF global.is_en %]Board of Directors Profile[% ELSE %]Profil Direksi[% END %]</button>
+      </li>
+    </ul>
+    <div class="tab-content text-justify" id="myTabContent">
+      <div class="tab-pane fade show active" id="boc-profile" role="tabpanel" aria-labelledby="boc-profile-tab">
+        <p class="mt-4 mb-4">[% IF global.is_en %]Based on the Deed of Meeting Resolutions Statement No. 310 dated 25 June 2026, drawn up before Jose Dima Satria, S.H., M.Kn., Notary in Jakarta, the Board of Commissioners consists of the following six members, each with a term of office from 20 May 2024 until the conclusion of the annual general meeting of shareholders of the Company to be held in 2027, except Mrs Alissa Qotrunnada Munawaroh Wahid and Mr Scott John Blakemore, both with a term of office from 20 May 2025 until the conclusion of the annual general meeting of shareholders of the Company to be held in 2028, and Mrs Ayu Patricia Racmat with a term of office from 19 May 2026 until the conclusion of the annual general meeting of shareholders of the Company to be held in 2029:
+
+          [% ELSE %]Berdasarkan Akta Pernyataan Keputusan Rapat No. 310 tertanggal 25 Juni 2026 yang dibuat di hadapan Jose Dima Satria, S.H., M.Kn., Notaris di Jakarta, Dewan Komisaris terdiri dari enam anggota berikut, dengan masa jabatan masing-masing terhitung sejak tanggal 20 Mei 2024 hingga ditutupnya RUPST Perseroan yang akan diselenggarakan pada tahun 2027, kecuali Ibu Alissa Qotrunnada Munawaroh Wahid dan Bapak Scott John Blakemore, keduanya dengan masa jabatan sejak tanggal 20 Mei 2025, hingga ditutupnya RUPST Perseroan yang akan diselenggarakan pada tahun 2028, dan Ibu Ayu Patricia Rachmat dengan masa jabatan sejak tanggal 19 Mei 2026, hingga ditutupnya RUPST Perseroan yang akan diselenggarakan pada tahun 2029:[% END %]</p>
+
+        <div class="row">
+          [% board_type = 'director' %]
+          [% FOREACH director = ir.var.ir_Directors.$board_type.format.directors %]
+            [% IF director.priority <= 9 %]
+              <div class="col-lg-4 col-md-4 col-sm-6 col-12">
+                <a data-bs-target="#modal-" data-bs-toggle="modal" class="box-item-profile">
+                  [% IF director.name == 'Sugito Walujo' %]
+                  <div class="box-profile-mgmt-wrapper">
+                    <div class="box-profile-mgmt">
+                      <div class="boxText" data-mh="boc-bod-profile">
+                        <!-- <img src="[% director.url_image %]" class="img-boc-bod-profile"> -->
+                        <p class="boc-bod-name">Ayu Patricia Rachmat</p>
+                    <p class="boc-bod-position">[% IF global.is_en %][% director.designation %][% ELSE %][% director.remarks %][% END %]</p>
+                      </div>
+                    </div>
+                  </div>
+                  [% ELSE %]
+                  <div class="box-profile-mgmt-wrapper">
+                    <div class="box-profile-mgmt">
+                      <div class="boxText" data-mh="boc-bod-profile">
+                        <img src="[% director.url_image %]" class="img-boc-bod-profile">
+                        <p class="boc-bod-name">[% director.name %]</p>
+                    <p class="boc-bod-position">[% IF global.is_en %][% director.designation %][% ELSE %][% director.remarks %][% END %]</p>
+                      </div>
+                    </div>
+                  </div>
+                  [% END %]
+                </a>
+              </div>
+              <div class="modal fade" id="modal-[% director.director_id %]" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-scrollable">
+                  <div class="modal-content">
+                    <div class="close-content">
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="row mt-4">
+                      <div class="col-lg-4 col-md-4 col-sm-4 col-12">
+                        <img class="img-mgmt-inner" src="[% director.url_image %]">
+                        <div class="boxName-inner">
+                          <p class="boc-bod-name">[% director.name %]</p>
+                      <p class="boc-bod-position">[% IF global.is_en %][% director.designation %][% ELSE %][% director.remarks %][% END %]</p>
+                        </div>
+                      </div>
+                      <div class="col-lg-8 col-md-8 col-sm-8 col-12">
+                        <div class="box-grid-inner desc">
+                          <div class="box-profile-desc">
+                        [% IF global.is_en %][% director.description %][% ELSE %][% director.description_summary %][% END %]
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            [% END %]
+          [% END %]
+        </div>
+      </div>
+      <div class="tab-pane fade" id="bod-profile" role="tabpanel" aria-labelledby="bod-profile-tab">
+        <p class="mt-4 mb-4">[% IF global.is_en %]Based on the Deed of Meeting Resolutions Statement No. 310 dated 25 June 2026, drawn up before Jose Dima Satria, S.H., M.Kn., Notary in Jakarta, with effect from 19 May 2026, the Board of Directors of the Company consists of the following two members:
+          [% ELSE %]Berdasarkan Akta Pernyataan Keputusan Rapat No. 310 tertanggal 25 Juni 2026 yang dibuat di hadapan Jose Dima Satria, S.H., M.Kn., Notaris di Jakarta, efektif sejak tanggal 19 Mei 2026, Direksi Perseroan terdiri dari dua anggota, yaitu:[% END %]</p>
+
+        <div class="row">
+          [% board_type = 'director' %]
+          [% FOREACH director = ir.var.ir_Directors.$board_type.format.directors %]
+            [% IF director.priority >= 10 %]
+              <div class="col-lg-4 col-md-4 col-sm-6 col-12">
+                <a data-bs-target="#modal-[% director.director_id %]" data-bs-toggle="modal" class="box-item-profile">
+                  <div class="box-profile-mgmt-wrapper">
+                    <div class="box-profile-mgmt">
+                      <div class="boxText" data-mh="boc-bod-profile">
+                        <img src="[% director.url_image %]" class="img-boc-bod-profile">
+                        <p class="boc-bod-name">[% director.name %]</p>
+                    <p class="boc-bod-position">[% IF global.is_en %][% director.designation %][% ELSE %][% director.remarks %][% END %]</p>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              </div>
+              <div class="modal fade" id="modal-[% director.director_id %]" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-scrollable">
+                  <div class="modal-content">
+                    <div class="close-content">
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="row mt-4">
+                      <div class="col-lg-4 col-md-4 col-sm-4 col-12">
+                        <img class="img-mgmt-inner" src="[% director.url_image %]">
+                        <div class="boxName-inner">
+                          <p class="boc-bod-name">[% director.name %]</p>
+                      <p class="boc-bod-position">[% IF global.is_en %][% director.designation %][% ELSE %][% director.remarks %][% END %]</p>
+                        </div>
+                      </div>
+                      <div class="col-lg-8 col-md-8 col-sm-8 col-12">
+                        <div class="box-grid-inner desc">
+                          <div class="box-profile-desc">
+                        [% IF global.is_en %][% director.description %][% ELSE %][% director.description_summary %][% END %]
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            [% END %]
+          [% END %]
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+[% INCLUDE include_footer.tt %]

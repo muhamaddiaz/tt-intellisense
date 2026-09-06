@@ -83,7 +83,7 @@ test("long symbol labels are truncated", () => {
 });
 
 test("real fixture produces a usable outline", () => {
-  const src = readFileSync(join(root, "test-file-1.tt"), "utf8");
+  const src = readFileSync(join(root, "test", "fixtures", "directors.tt"), "utf8");
   const syms = toDocumentSymbols(parse(src), positionAtFor(src));
   assert.ok(syms.length > 0);
   const depth = (s) => 1 + Math.max(0, ...s.children.map(depth));

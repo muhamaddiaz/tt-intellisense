@@ -264,6 +264,23 @@ incomplete by design, so an unfamiliar path is not evidence of a mistake.
 
 Disable with `ttIntellisense.diagnostics.structural`.
 
+### Commenting
+
+`Ctrl+/` — `Cmd+/` on macOS — comments according to where the cursor is:
+
+| Cursor in | Result |
+|---|---|
+| a directive | `[% foo %]` → `[%# foo %]` |
+| HTML | `<!-- … -->` |
+| `<style>` | `/* … */` |
+| `<script>` | `/* … */` |
+
+Chomp modifiers survive, so `[%- foo -%]` becomes `[%-# foo -%]` and keeps its
+whitespace behaviour. Toggling twice restores the original text exactly.
+
+Multiple cursors each use the syntax of wherever they are, and two cursors on
+one line comment it once rather than twice.
+
 ### HTML, CSS and Emmet
 
 Outside a directive you get the editor's normal HTML and CSS support: tag and

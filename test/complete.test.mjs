@@ -150,7 +150,7 @@ test("an alias outside its loop does not resolve", () => {
 });
 
 test("real fixture: director. offers the mined element fields", () => {
-  const text = readFileSync(join(root, "test-file-1.tt"), "utf8");
+  const text = readFileSync(join(root, "test", "fixtures", "directors.tt"), "utf8");
   const marker = '<p class="boc-bod-name">[% director.';
   const offset = text.indexOf(marker) + marker.length;
   const result = parse(text);

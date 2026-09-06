@@ -116,7 +116,7 @@ test("outline %% tags are recognised", async () => {
 });
 
 test("real fixture tokenizes with no unscoped TT delimiters", async () => {
-  const src = readFileSync(join(root, "test-file-1.tt"), "utf8");
+  const src = readFileSync(join(root, "test", "fixtures", "directors.tt"), "utf8");
   const toks = await tokenize(src);
   const opens = toks.filter((t) => t.text === "[%");
   assert.ok(opens.length > 50, `expected many TT tags, saw ${opens.length}`);
@@ -127,7 +127,7 @@ test("real fixture tokenizes with no unscoped TT delimiters", async () => {
 });
 
 test("second fixture: broader constructs tokenize cleanly", async () => {
-  const src = readFileSync(join(root, "test-file-2.tt"), "utf8");
+  const src = readFileSync(join(root, "test", "fixtures", "constructs.tt"), "utf8");
   const toks = await tokenize(src);
 
   const opens = toks.filter(

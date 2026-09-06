@@ -9,6 +9,7 @@ import {
 
 import { activateFormatter } from "./formatter";
 import { activateTagClosing } from "./tag-closing";
+import { registerCommentCommand } from "./comment";
 
 let client: LanguageClient | undefined;
 let tagClosing: Disposable | undefined;
@@ -41,6 +42,12 @@ export function activate(context: ExtensionContext): void {
       active.sendRequest<string | null>("tt/tagComplete", { uri, position })
     );
     context.subscriptions.push(tagClosing);
+
+    context.subscriptions.push(
+      registerCommentCommand((uri, selections) =>
+        active.sendRequest("tt/toggleComment", { uri, selections })
+      )
+    );
   });
 }
 

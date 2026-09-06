@@ -1,0 +1,68 @@
+[%# Grammar fixture: constructs test-file-1.tt does not exercise. %]
+[%- USE Dumper -%]
+[% META title = 'Coverage Fixture' author = 'tt-intellisense' %]
+
+[% MACRO money(n) GET n | format('%.2f') %]
+
+[% BLOCK price_row %]
+  <tr><td>[% label | html %]</td><td>[% money(value) %]</td></tr>
+[% END %]
+
+[% WRAPPER layout/card title = "Financials" %]
+  <table class="table [% IF compact %]table-sm[% END %]">
+    [% FOREACH row IN report.rows %]
+      [% NEXT IF row.hidden %]
+      [% LAST IF loop.count > 100 %]
+      [% INCLUDE price_row label = row.title value = row.amount %]
+    [% END %]
+  </table>
+[% END %]
+
+[% SWITCH report.period %]
+  [% CASE 'quarterly' %]<span>Q[% report.quarter %]</span>
+  [% CASE ['annual', 'yearly'] %]<span>FY[% report.year %]</span>
+  [% CASE DEFAULT %]<span>[% report.period | ucfirst %]</span>
+[% END %]
+
+[% TRY %]
+  [% INCLUDE optional/extra.tt %]
+[% CATCH file %]
+  <p class="err">[% error.info | html %]</p>
+[% FINAL %]
+  [% CALL logger.flush %]
+[% END %]
+
+[% FILTER html_para %]
+Plain text run through a block filter.
+[% END %]
+
+[%# A tag broken across lines, with chomp on both ends. %]
+[%-
+  DEFAULT report.currency = 'SGD';
+  base_url = ir.config.company.url_domain.replace('http:', '');
+  section  = 'financials'
+-%]
+
+<div class="[% IF global.is_en %]en[% ELSE %]id[% END %]"
+     data-src="[% base_url %]/data/[% report.year %].json"
+     data-label="[% "FY${report.year} ${report.currency}" %]">
+  [% ir.var.ir_Download.$section.format.download.size %] files
+</div>
+
+<style>
+  .table-sm { font-size: 12px; }
+</style>
+
+<script>
+  var CONFIG = {
+    base: "[% base_url %]",
+    lang: "[% global.is_en ? 'en' : 'id' %]",
+    year: [% report.year %]
+  };
+</script>
+
+%% IF report.rows.size
+%%   FOREACH r IN report.rows
+<li>[% r.title | truncate(40) %]</li>
+%%   END
+%% END
