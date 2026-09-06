@@ -1,4 +1,4 @@
-# Embedded HTML and CSS get completion and hover, but never diagnostics
+# Embedded HTML and CSS get local editor features, but never diagnostics
 
 `.tt` files are mostly HTML, so the built-in HTML and CSS language services are
 forwarded to whenever the cursor sits outside a Template Toolkit directive. They
@@ -6,8 +6,8 @@ are given whitespace projections of the document — every character that is not
 theirs replaced by a space, newlines kept — so positions map one to one and no
 source map is involved.
 
-Only completion and hover are forwarded. Diagnostics, HTML-language-service
-formatting, folding and symbols are not.
+Completion, hover and folding are forwarded. Diagnostics,
+HTML-language-service formatting and symbols are not.
 
 ## Considered Options
 
@@ -27,6 +27,11 @@ unclosed-tag errors on templates that are perfectly correct. Since M3
 deliberately ships structural diagnostics with zero false positives on the
 reference corpus, importing a source of guaranteed false positives would undo
 the most valuable property the diagnostics have.
+
+Folding is similarly tolerant. The host services only return a range for an
+HTML element or CSS block they can positively match. An unmatched element in a
+projected branch produces no host fold instead of an error, while Template
+Toolkit's own block and per-branch folds are merged into the same response.
 
 Choosing one branch to project was rejected: it makes the other branch invisible
 to completion, and there is no principled way to pick.

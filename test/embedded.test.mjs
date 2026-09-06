@@ -115,6 +115,30 @@ test("hover is forwarded for HTML elements", () => {
   assert.ok(h, "no hover for a div");
 });
 
+test("nested HTML elements produce folding ranges", () => {
+  const text = "<main>\n  <section>\n    <p>x</p>\n  </section>\n</main>";
+  const d = doc(text);
+  const ranges = svc.embeddedFoldingRanges(d, parse(text));
+  assert.ok(
+    ranges.some((range) => range.startLine === 0 && range.endLine === 3),
+    `outer HTML fold missing from ${JSON.stringify(ranges)}`
+  );
+  assert.ok(
+    ranges.some((range) => range.startLine === 1 && range.endLine === 2),
+    `nested HTML fold missing from ${JSON.stringify(ranges)}`
+  );
+});
+
+test("CSS rules inside a style element produce folding ranges", () => {
+  const text = "<style>\n.a {\n  color: red;\n}\n</style>";
+  const d = doc(text);
+  const ranges = svc.embeddedFoldingRanges(d, parse(text));
+  assert.ok(
+    ranges.some((range) => range.startLine === 1 && range.endLine === 2),
+    `CSS fold missing from ${JSON.stringify(ranges)}`
+  );
+});
+
 // ------------------------------------------------------------------ corpus
 
 const CORPUS = process.env.TT_CORPUS;

@@ -96,7 +96,7 @@
         "ttIntellisense.embedded.enabled": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Forward completion and hover to the built-in HTML and CSS language services when the cursor is outside a Template Toolkit directive. Diagnostics are never forwarded: a branching template does not project to well-formed HTML."
+          "markdownDescription": "Forward completion, hover and folding to the built-in HTML and CSS language services when outside a Template Toolkit directive. Diagnostics are never forwarded: a branching template does not project to well-formed HTML."
         },
         "ttIntellisense.autoClosingTags": {
           "type": "boolean",

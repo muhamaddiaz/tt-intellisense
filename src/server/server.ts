@@ -45,6 +45,7 @@ import { hoverAt } from "./hover";
 import { SchemaStore } from "./schema/store";
 import {
   embeddedCompletion,
+  embeddedFoldingRanges,
   embeddedHover,
   forgetProjection,
   tagCompletion,
@@ -317,7 +318,11 @@ connection.onDefinition((params): Location[] => {
 connection.onFoldingRanges((params): FoldingRange[] => {
   const doc = documents.get(params.textDocument.uri);
   if (!doc) return [];
-  return toFoldingRanges(parsed(doc), (o) => doc.positionAt(o));
+  const result = parsed(doc);
+  const templateRanges = toFoldingRanges(result, (o) => doc.positionAt(o));
+  return embeddedEnabled
+    ? [...templateRanges, ...embeddedFoldingRanges(doc, result)]
+    : templateRanges;
 });
 
 connection.onDocumentSymbol((params): DocumentSymbol[] => {

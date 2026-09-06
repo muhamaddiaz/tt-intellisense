@@ -267,9 +267,9 @@ Disable with `ttIntellisense.diagnostics.structural`.
 ### HTML, CSS and Emmet
 
 Outside a directive you get the editor's normal HTML and CSS support: tag and
-attribute completion, CSS properties, Emmet, and auto-closing tags. Typing `>`
-inserts the matching close — never inside a directive, where `>` is a comparison
-operator.
+attribute completion, CSS properties, Emmet, fold/unfold controls for HTML
+elements and CSS blocks, and auto-closing tags. Typing `>` inserts the matching
+close — never inside a directive, where `>` is a comparison operator.
 
 HTML *diagnostics* are not forwarded, on purpose: a template that branches does
 not form valid HTML on its own, so they would flag correct files.
@@ -309,7 +309,7 @@ same preference can still remain enabled for other languages.
 | `ttIntellisense.schema.dumpDirectory` | `.tt-schema` | Where stash dumps live. One path or a list. Relative to each workspace folder; absolute and `~` paths used as given, so one dump can serve every project. |
 | `ttIntellisense.schema.curatedFile` | `tt-schema.json` | Curated descriptions and types. Same path rules. |
 | `ttIntellisense.diagnostics.structural` | `true` | Report structural errors. |
-| `ttIntellisense.embedded.enabled` | `true` | HTML/CSS completion and hover. |
+| `ttIntellisense.embedded.enabled` | `true` | HTML/CSS completion, hover and folding. |
 | `ttIntellisense.autoClosingTags` | `true` | Insert closing tags on `>` and `/`. |
 | `ttIntellisense.formatting.enabled` | `true` | Enable the bundled Template Toolkit-aware document formatter. |
 

@@ -1,11 +1,12 @@
 /**
- * Forwards completion and hover to the HTML and CSS language services.
+ * Forwards completion, hover and folding to the HTML and CSS language services.
  *
- * Only completion and hover are forwarded. Diagnostics, formatting and folding
- * are not: the HTML projection of a branching template is not well-formed —
+ * Diagnostics and formatting are not forwarded: the HTML projection of a
+ * branching template is not well-formed —
  * `[% IF a %]<div>[% ELSE %]<span>[% END %]` projects to `<div><span>` — so any
- * feature that reasons about document validity would be confidently wrong. See
- * ADR 0004.
+ * feature that reports document validity would be confidently wrong. Folding
+ * is safe because it only describes ranges the host services can positively
+ * match; incomplete branches simply produce no host range. See ADR 0004.
  */
 import {
   getLanguageService as getHtmlService,
@@ -13,7 +14,12 @@ import {
 } from "vscode-html-languageservice";
 import { getCSSLanguageService } from "vscode-css-languageservice";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import type { CompletionItem, Hover, Position } from "vscode-languageserver/node";
+import type {
+  CompletionItem,
+  FoldingRange,
+  Hover,
+  Position,
+} from "vscode-languageserver/node";
 
 import { cssProjection, htmlProjection, inDirective, languageAt } from "./embedded";
 import type { ParseResult } from "./parser";
@@ -102,6 +108,18 @@ export function tagCompletion(
 
   const projection = projectionFor(doc, result);
   return html.doTagComplete(projection.htmlDoc, position, projection.htmlParsed);
+}
+
+/** Foldable HTML elements and CSS blocks, mapped one-to-one to the TT document. */
+export function embeddedFoldingRanges(
+  doc: TextDocument,
+  result: ParseResult
+): FoldingRange[] {
+  const projection = projectionFor(doc, result);
+  return [
+    ...html.getFoldingRanges(projection.htmlDoc),
+    ...css.getFoldingRanges(projection.cssDoc),
+  ];
 }
 
 /** Hover from whichever embedded language the cursor is in. */
