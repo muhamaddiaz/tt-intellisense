@@ -13,12 +13,10 @@
   <ul>
     [% IF ir.var.ir_Download.financials.format.download_count > 0 %]
       <li>Helloworld</li>
-      [% END %]
+    [% END %]
     <li></li>
     <li>2</li>
   </ul>
 </div>
-
-
 
 [% INCLUDE include_breadcrumb.tt %]

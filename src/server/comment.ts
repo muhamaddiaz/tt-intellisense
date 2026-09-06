@@ -133,33 +133,46 @@ function toggleBlock(
 /**
  * Edits that toggle comments for a set of selections.
  *
- * Selections are processed back to front so earlier offsets stay valid as later
- * edits are applied.
+ * At most one edit is produced per line. Two cursors inside one directive would
+ * otherwise each insert a `#`, and a cursor in a directive alongside one in the
+ * surrounding HTML would comment the same line twice, in two syntaxes. When
+ * selections on a line disagree about context the first in document order wins,
+ * which is arbitrary but predictable and never produces overlapping edits.
  */
 export function toggleComment(
   text: string,
   result: ParseResult,
   selections: Array<{ start: number; end: number }>
 ): Edit[] {
-  const ordered = [...selections].sort((a, b) => b.start - a.start);
+  const ordered = [...selections].sort((a, b) => a.start - b.start);
   const edits: Edit[] = [];
-  const covered: Array<{ start: number; end: number }> = [];
+  const claimedLines = new Set<number>();
 
   for (const selection of ordered) {
-    // Two cursors on the same line would otherwise comment it twice.
     const span = lineSpan(text, selection.start, selection.end);
-    if (covered.some((c) => c.start === span.start && c.end === span.end)) continue;
+
+    // Every line the selection touches, so a multi-line selection cannot be
+    // commented again by a later cursor sitting inside it.
+    const lines: number[] = [];
+    let cursor = span.start;
+    while (cursor <= span.end) {
+      lines.push(cursor);
+      const nextBreak = text.indexOf("\n", cursor);
+      if (nextBreak === -1 || nextBreak >= span.end) break;
+      cursor = nextBreak + 1;
+    }
+    if (lines.some((l) => claimedLines.has(l))) continue;
+    for (const l of lines) claimedLines.add(l);
 
     const context = commentContextAt(text, selection.start, result);
     if (context === "directive") {
       edits.push(...toggleDirective(text, selection.start, result));
       continue;
     }
-
-    covered.push(span);
     edits.push(...toggleBlock(text, selection.start, selection.end, context));
   }
 
+  // Applied back to front so earlier offsets stay valid.
   return edits.sort((a, b) => b.start - a.start);
 }
 

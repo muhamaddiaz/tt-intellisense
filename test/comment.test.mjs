@@ -152,3 +152,80 @@ test("cursors in different contexts each get their own syntax", () => {
 test("an empty document produces no edits", () => {
   assert.deepEqual(toggleComment("", parse(""), [{ start: 0, end: 0 }]), []);
 });
+
+// ------------------------------------------------- one edit per line
+// Regressions from review. Directive edits used to bypass the per-line
+// bookkeeping, so several cursors on one line each produced an edit.
+
+function toggleMulti(text, offsets) {
+  let out = text;
+  for (const e of toggleComment(text, parse(text), offsets.map((o) => ({ start: o, end: o })))) {
+    out = out.slice(0, e.start) + e.newText + out.slice(e.end);
+  }
+  return out;
+}
+
+test("two cursors inside one directive comment it once", () => {
+  assert.equal(toggleMulti("[% foo bar %]", [4, 8]), "[%# foo bar %]");
+});
+
+test("a cursor in a directive and one in the same line's HTML comment it once", () => {
+  assert.equal(toggleMulti("<p>[% x %]</p>", [1, 6]), "<!-- <p>[% x %]</p> -->");
+});
+
+test("cursors on different lines are independent", () => {
+  assert.equal(
+    toggleMulti("<p>a</p>\n[% x %]", [1, 12]),
+    "<!-- <p>a</p> -->\n[%# x %]"
+  );
+});
+
+test("a cursor inside a multi-line selection does not comment it twice", () => {
+  const text = "<p>a</p>\n<p>b</p>";
+  let out = text;
+  for (const e of toggleComment(text, parse(text), [
+    { start: 0, end: 17 },
+    { start: 10, end: 10 },
+  ])) {
+    out = out.slice(0, e.start) + e.newText + out.slice(e.end);
+  }
+  assert.equal(out, "<!-- <p>a</p>\n<p>b</p> -->");
+});
+
+test("edits never overlap, whatever the selections", () => {
+  const docs = [
+    "<div>[% IF a %]x[% ELSE %]y[% END %]</div>",
+    "<style>.a{}</style>\n[% x %]\n<p>t</p>",
+    "[% a %][% b %]\n<script>var x=1;</script>",
+    "  <p>[% v %]</p>\n\n[%- c -%]\n",
+  ];
+  let seed = 3;
+  const rnd = (n) => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff), seed % n);
+
+  for (let i = 0; i < 2000; i++) {
+    const text = docs[rnd(docs.length)];
+    const selections = [];
+    for (let k = 0, n = 1 + rnd(4); k < n; k++) {
+      const a = rnd(text.length + 1);
+      const b = rnd(text.length + 1);
+      selections.push({ start: Math.min(a, b), end: Math.max(a, b) });
+    }
+    const edits = [...toggleComment(text, parse(text), selections)].sort(
+      (x, y) => x.start - y.start
+    );
+    for (let k = 1; k < edits.length; k++) {
+      assert.ok(
+        edits[k].start >= edits[k - 1].end,
+        `overlapping edits for ${JSON.stringify(text)} at ${JSON.stringify(selections)}`
+      );
+    }
+  }
+});
+
+test("a multi-line directive comments at its opening delimiter", () => {
+  assert.equal(toggleMulti("[% IF a\n   && b\n%]x[% END %]", [10]), "[%# IF a\n   && b\n%]x[% END %]");
+});
+
+test("an unterminated directive still comments", () => {
+  assert.equal(toggleMulti("[% foo", [4]), "[%# foo");
+});
