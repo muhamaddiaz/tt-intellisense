@@ -7,6 +7,8 @@
  * half-typed documents constantly.
  */
 
+import { DIRECTIVE_INFO } from "./directives";
+
 export type TagKind = "block" | "outline" | "comment";
 
 export interface Tag {
@@ -45,13 +47,7 @@ export interface Token {
 }
 
 /** Every keyword that may begin a directive. */
-export const DIRECTIVE_KEYWORDS = new Set([
-  "GET", "SET", "CALL", "DEFAULT", "INSERT", "INCLUDE", "PROCESS", "WRAPPER",
-  "BLOCK", "VIEW", "IF", "UNLESS", "ELSIF", "ELSE", "SWITCH", "CASE", "FOREACH",
-  "FOR", "WHILE", "FILTER", "USE", "MACRO", "PERL", "RAWPERL", "TRY", "THROW",
-  "CATCH", "FINAL", "NEXT", "LAST", "BREAK", "RETURN", "STOP", "CLEAR", "TAGS",
-  "META", "DEBUG", "END",
-]);
+export const DIRECTIVE_KEYWORDS = new Set(Object.keys(DIRECTIVE_INFO));
 
 /** Keywords that open a block and require a matching END. */
 export const BLOCK_OPENERS = new Set([

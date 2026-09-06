@@ -2,7 +2,7 @@
   "name": "tt-intellisense",
   "displayName": "TT IntelliSense",
   "description": "Language support for Perl Template Toolkit: highlighting, navigation, diagnostics and variable completion.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "MIT",
   "icon": "images/extension-icon.png",
   "galleryBanner": {

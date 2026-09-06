@@ -1,5 +1,5 @@
 /**
- * Hover for variable paths.
+ * Hover for directive keywords and variable paths.
  *
  * Shows what the schema knows: the path, its shape, where the knowledge came
  * from, and a sample value when a dump supplied one. Values whose key looks
@@ -7,12 +7,13 @@
  * not a display concern, so it cannot be bypassed by another consumer.
  */
 import type { ParseResult } from "./parser";
+import { directiveInfo } from "./directives";
 import { collectConstants, readVariablePath } from "./paths";
 import { resolvePath, scopeAt, type ScopeBinding } from "./complete";
 import type { Layer, SchemaNode } from "./schema/model";
 
 export interface HoverInfo {
-  /** The full path under the cursor. */
+  /** The directive keyword or full variable path under the cursor. */
   path: string[];
   /** Offsets of the path in the document. */
   start: number;
@@ -86,6 +87,21 @@ export function hoverAt(
   result: ParseResult,
   schema: SchemaNode
 ): HoverInfo | null {
+  for (const directive of result.directives) {
+    const token = directive.keywordToken;
+    if (!token || offset < token.start || offset > token.end) continue;
+
+    const info = directiveInfo(token.value);
+    if (info) {
+      return {
+        path: [token.value],
+        start: token.start,
+        end: token.end,
+        markdown: ["```tt", info.syntax, "```", info.description].join("\n"),
+      };
+    }
+  }
+
   const found = pathAt(text, offset, result);
   if (!found) return null;
 

@@ -7,6 +7,7 @@
  * anything less leaves most of the file uncovered.
  */
 import type { ParsedBlock, ParseResult } from "./parser";
+import { directiveInfo } from "./directives";
 import { DIRECTIVE_KEYWORDS } from "./lexer";
 import { collectConstants, readVariablePath } from "./paths";
 import { lookupThroughLists, type SchemaNode } from "./schema/model";
@@ -225,7 +226,14 @@ export function keywordSuggestions(partial: string): Suggestion[] {
   const out: Suggestion[] = [];
   for (const kw of DIRECTIVE_KEYWORDS) {
     if (partial && !kw.startsWith(partial.toUpperCase())) continue;
-    out.push({ label: kw, detail: "directive", rank: 1, kind: "keyword" });
+    const info = directiveInfo(kw)!;
+    out.push({
+      label: kw,
+      detail: info.syntax,
+      documentation: info.description,
+      rank: 1,
+      kind: "keyword",
+    });
   }
   return out;
 }

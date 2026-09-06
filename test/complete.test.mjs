@@ -90,6 +90,15 @@ test("directive keywords are offered at a head", () => {
   assert.ok(labels.includes("FOR"));
 });
 
+test("every directive completion includes syntax and a description", () => {
+  const suggestions = c.keywordSuggestions("");
+  assert.ok(suggestions.length > 0);
+  for (const suggestion of suggestions) {
+    assert.match(suggestion.detail, /^\[% .* %\]/, `${suggestion.label} has no syntax`);
+    assert.ok(suggestion.documentation, `${suggestion.label} has no description`);
+  }
+});
+
 test("keywords are not offered mid-path", () => {
   const { labels } = completeAt("[% ir.F| %]");
   assert.ok(!labels.includes("FOREACH"));
@@ -191,6 +200,13 @@ test("hover lists the fields of a hash", () => {
 test("hover says an unknown path is not necessarily a mistake", () => {
   const info = hoverAt("[% nothing.he|re %]", {}, false);
   assert.match(info.markdown, /not necessarily a mistake/i);
+});
+
+test("hover describes directive syntax", () => {
+  const info = hoverAt("[% I|F ready %]");
+  assert.deepEqual(info.path, ["IF"]);
+  assert.match(info.markdown, /\[% IF condition %\]/);
+  assert.match(info.markdown, /condition evaluates true/);
 });
 
 test("hover returns nothing outside a directive", () => {
