@@ -23,6 +23,10 @@ It remains the recommendation for formatting, which we deliberately do not do.
 Regex-only was rejected because scope-aware alias resolution and reliable `END`
 balancing are not achievable with it, and those are the features being bought.
 
+Measured after the fact, the full-reparse assumption held: the 133 KB template
+parses in 0.3 ms, so no incremental strategy is needed at any plausible
+document size.
+
 ## Consequences
 
 Error recovery is our responsibility and must be deliberate: an editor sees

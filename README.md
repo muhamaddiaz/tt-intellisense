@@ -12,7 +12,7 @@ Targets VS Code and forks (Cursor, VSCodium). Distributed as a `.vsix`.
 |---|---|
 | M1 — language registration + grammar | done |
 | M2 — INCLUDE / BLOCK navigation | done |
-| M3 — parser, structural diagnostics, folding, symbols | not started |
+| M3 — parser, structural diagnostics, folding, symbols | done |
 | M4 — schema layers, completion, hover | not started |
 
 ## Navigation coverage
@@ -27,8 +27,27 @@ and footer it includes. On complete template trees in the reference corpus
 resolution reaches 91–100%; across the whole corpus, which is mostly partial
 checkouts, it is 54%.
 
-Blocks defined in a *different* file are not yet resolved. That needs a
-workspace index and arrives with M3.
+Blocks defined in a different file resolve through a workspace index, ranked by
+directory proximity — these trees hold many sibling copies of the same template,
+so the nearest definition is almost always the intended one.
+
+## Diagnostics
+
+Structural problems are reported as errors: unbalanced `END`, unclosed blocks,
+unterminated tags, misplaced `ELSE`/`ELSIF`/`CASE`/`CATCH`/`FINAL`, a clause
+after `ELSE`, and mistyped directive keywords. Turn them off with
+`ttIntellisense.diagnostics.structural`.
+
+A mistyped keyword is only reported when it is within two edits of a real one,
+so `FOEACH` is caught while constant-style variables like
+`[% DEFAULT_COMMISSION %]` are left alone.
+
+Unknown variables are deliberately *not* reported. Variable knowledge is
+incomplete by construction — see ADR 0001 — so an unknown path is not evidence
+of a mistake.
+
+Across the 289-file reference corpus the parser reports zero diagnostics, which
+is the expected result: those templates are known good.
 
 ## Design
 

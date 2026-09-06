@@ -4,9 +4,9 @@ import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, readdirSync, statS
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import pkg from "../out/server/resolve.js";
-import scanPkg from "../out/server/scan.js";
+import parserPkg from "../out/server/parser.js";
 const { resolveTemplate, absoluteRoots } = pkg;
-const { scan } = scanPkg;
+const { parse, templateRefs } = parserPkg;
 
 function sandbox() {
   const d = mkdtempSync(join(tmpdir(), "tt-resolve-"));
@@ -106,8 +106,11 @@ test("corpus: report how many real references resolve", { skip: !CORPUS }, () =>
 
   for (const f of files) {
     const src = readFileSync(f, "utf8");
-    const { refs, blocks } = scan(src);
-    const names = new Set(blocks.map((b) => b.name));
+    const result = parse(src);
+    const refs = templateRefs(result);
+    const names = new Set(
+      result.allBlocks.filter((b) => b.keyword === "BLOCK" && b.name).map((b) => b.name)
+    );
     for (const r of refs) {
       total++;
       if (names.has(r.name)) { viaBlock++; continue; }

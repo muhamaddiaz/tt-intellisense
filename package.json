@@ -55,6 +55,11 @@
           },
           "default": [],
           "markdownDescription": "Additional directories searched when resolving `INCLUDE`, `PROCESS`, `INSERT` and `WRAPPER` targets, mirroring Template Toolkit's `INCLUDE_PATH`. Relative paths resolve against each workspace folder. The directory of the file containing the reference is always searched first."
+        },
+        "ttIntellisense.diagnostics.structural": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Report structural problems: unbalanced `END`, unclosed blocks, unterminated tags, misplaced `ELSE`/`CASE`/`CATCH`, and mistyped directive keywords."
         }
       }
     }
@@ -62,7 +67,7 @@
   "scripts": {
     "build": "tsc -p .",
     "test": "node --test test/*.test.mjs",
-    "pretest": "node test/fetch-grammars.mjs",
+    "pretest": "node test/fetch-grammars.mjs && tsc -p .",
     "vscode:prepublish": "npm run build"
   },
   "devDependencies": {
