@@ -42,6 +42,7 @@ import {
 } from "./complete";
 import { hoverAt } from "./hover";
 import { DEFAULT_STORE_OPTIONS, SchemaStore } from "./schema/store";
+import { embeddedCompletion, embeddedHover, forgetProjection } from "./embedded-service";
 
 const connection = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments(TextDocument);
@@ -51,6 +52,7 @@ const schema = new SchemaStore();
 let workspaceDirs: string[] = [];
 let configuredRoots: string[] = [];
 let structuralDiagnostics = true;
+let embeddedEnabled = true;
 let supportsConfiguration = false;
 
 /** Parses are cached per document version; every feature request would reparse otherwise. */
@@ -97,7 +99,12 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
       foldingRangeProvider: true,
       documentSymbolProvider: true,
       hoverProvider: true,
-      completionProvider: { triggerCharacters: [".", "%", " "], resolveProvider: false },
+        completionProvider: {
+        // `.` and `%` open TT paths and tags; `<`, `/` and `:` are the HTML and
+        // CSS triggers, forwarded when the cursor is outside a directive.
+        triggerCharacters: [".", "%", " ", "<", "/", ":", "-"],
+        resolveProvider: false,
+      },
     },
   };
 });
@@ -142,9 +149,11 @@ async function refreshConfiguration(): Promise<void> {
     const raw = Array.isArray(cfg?.includePath) ? cfg.includePath : [];
     configuredRoots = raw.filter((r: unknown): r is string => typeof r === "string");
     structuralDiagnostics = cfg?.diagnostics?.structural !== false;
+    embeddedEnabled = cfg?.embedded?.enabled !== false;
   } catch {
     configuredRoots = [];
     structuralDiagnostics = true;
+    embeddedEnabled = true;
   }
   for (const doc of documents.all()) publishDiagnostics(doc);
 }
@@ -176,6 +185,7 @@ documents.onDidChangeContent((e) => {
 documents.onDidClose((e) => {
   cache.delete(e.document.uri);
   schema.closeDocument(e.document.uri);
+  forgetProjection(e.document.uri);
   void connection.sendDiagnostics({ uri: e.document.uri, diagnostics: [] });
 });
 
@@ -282,7 +292,12 @@ connection.onCompletion((params): CompletionItem[] => {
   const result = parsed(doc);
 
   const context = completionContext(text, offset, result);
-  if (!context.inDirective) return [];
+  if (!context.inDirective) {
+    // Outside a directive the cursor is in HTML or CSS, so the embedded
+    // services answer. Directive completion never mixes with theirs: the two
+    // are disjoint by position, and merging them would bury both.
+    return embeddedEnabled ? embeddedCompletion(doc, params.position, result) : [];
+  }
 
   const scope = scopeAt(result, offset);
   let suggestions: Suggestion[];
@@ -315,8 +330,11 @@ connection.onHover((params): Hover | null => {
   const doc = documents.get(params.textDocument.uri);
   if (!doc) return null;
 
-  const info = hoverAt(doc.getText(), doc.offsetAt(params.position), parsed(doc), schema.schema);
-  if (!info) return null;
+  const result = parsed(doc);
+  const info = hoverAt(doc.getText(), doc.offsetAt(params.position), result, schema.schema);
+  if (!info) {
+    return embeddedEnabled ? embeddedHover(doc, params.position, result) : null;
+  }
 
   return {
     contents: { kind: MarkupKind.Markdown, value: info.markdown },

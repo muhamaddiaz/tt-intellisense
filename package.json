@@ -70,7 +70,17 @@
           "type": "string",
           "default": "tt-schema.json",
           "markdownDescription": "Curated schema file, relative to each workspace folder. Maps dotted paths to `description` and `type`, overriding what dumps and mining supply."
+        },
+        "ttIntellisense.embedded.enabled": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Forward completion and hover to the built-in HTML and CSS language services when the cursor is outside a Template Toolkit directive. Diagnostics are never forwarded: a branching template does not project to well-formed HTML."
         }
+      }
+    },
+    "configurationDefaults": {
+      "emmet.includeLanguages": {
+        "tt": "html"
       }
     }
   },
@@ -89,6 +99,8 @@
     "vscode-textmate": "^9.3.2"
   },
   "dependencies": {
+    "vscode-css-languageservice": "^6.3.10",
+    "vscode-html-languageservice": "^5.6.2",
     "vscode-languageclient": "^9.0.1",
     "vscode-languageserver": "^9.0.1",
     "vscode-languageserver-textdocument": "^1.0.14"

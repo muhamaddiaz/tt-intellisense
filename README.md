@@ -14,6 +14,7 @@ Targets VS Code and forks (Cursor, VSCodium). Distributed as a `.vsix`.
 | M2 — INCLUDE / BLOCK navigation | done |
 | M3 — parser, structural diagnostics, folding, symbols | done |
 | M4 — schema layers, completion, hover | done |
+| M5 — embedded HTML/CSS IntelliSense | done |
 
 ## Navigation coverage
 
@@ -30,6 +31,21 @@ checkouts, it is 54%.
 Blocks defined in a different file resolve through a workspace index, ranked by
 directory proximity — these trees hold many sibling copies of the same template,
 so the nearest definition is almost always the intended one.
+
+## HTML and CSS
+
+Outside a directive, completion and hover are forwarded to the built-in HTML and
+CSS language services, so tag and attribute completion, CSS property completion
+and Emmet all work inside `.tt` files. The services see whitespace projections
+of the document with everything that is not theirs blanked out, which keeps
+positions identical and needs no source map.
+
+Diagnostics are never forwarded, and JavaScript is not forwarded at all — see
+[ADR 0004](docs/adr/0004-embedded-language-forwarding.md). A branching template
+does not project to well-formed HTML, so HTML diagnostics would be reliably
+wrong on correct templates.
+
+Turn forwarding off with `ttIntellisense.embedded.enabled`.
 
 ## Diagnostics
 
