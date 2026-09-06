@@ -19,6 +19,7 @@ variables your Perl app passes in are invisible. This fixes that.
 | **Includes** | copy the filename, then search for it | Ctrl+click `include_header.tt` and you're there |
 | **Typos** | found when Perl renders it | red squiggle on the unbalanced `END`, while you type |
 | **HTML** | no tag completion, no Emmet | tag/attribute completion, Emmet, auto-closing tags |
+| **Formatting** | manually tidy mixed TT and HTML | format the document with the bundled Template Toolkit-aware Prettier plugin |
 | **Big files** | endless scrolling | fold blocks, jump via the outline (`Ctrl+Shift+O`, `Cmd+Shift+O` on macOS) |
 
 ---
@@ -273,6 +274,31 @@ operator.
 HTML *diagnostics* are not forwarded, on purpose: a template that branches does
 not form valid HTML on its own, so they would flag correct files.
 
+### Formatting
+
+Run **Format Document** from the command palette or use the editor's normal
+format-document shortcut. The extension bundles
+[`@koha-community/prettier-plugin-template-toolkit`](https://www.npmjs.com/package/@koha-community/prettier-plugin-template-toolkit)
+and uses its `template-toolkit` parser, so no separate Prettier extension or
+plugin installation is required. In a trusted workspace, formatting also reads
+the nearest Prettier configuration and `.editorconfig` file.
+
+Formatting on save remains opt-in through VS Code. This workspace setting makes
+TT IntelliSense the formatter for TT files and runs it when a file is saved:
+
+```json
+{
+  "[tt]": {
+    "editor.defaultFormatter": "shareinvestor.tt-intellisense",
+    "editor.formatOnSave": true
+  }
+}
+```
+
+Set `ttIntellisense.formatting.enabled` to `false` whenever you want to disable
+the built-in formatter. This is independent of `editor.formatOnSave`, so the
+same preference can still remain enabled for other languages.
+
 ---
 
 ## Settings
@@ -285,6 +311,7 @@ not form valid HTML on its own, so they would flag correct files.
 | `ttIntellisense.diagnostics.structural` | `true` | Report structural errors. |
 | `ttIntellisense.embedded.enabled` | `true` | HTML/CSS completion and hover. |
 | `ttIntellisense.autoClosingTags` | `true` | Insert closing tags on `>` and `/`. |
+| `ttIntellisense.formatting.enabled` | `true` | Enable the bundled Template Toolkit-aware document formatter. |
 
 ---
 
@@ -329,7 +356,7 @@ after it will be misread.
 
 ```bash
 npm install
-npm test          # 222 tests
+npm test
 npm run build     # compile only
 npm run package   # build the .vsix
 ```
@@ -370,6 +397,3 @@ and the layered schema.
 | [ADR 0002](docs/adr/0002-hand-written-parser.md) | why a hand-written parser, not tree-sitter |
 | [ADR 0003](docs/adr/0003-two-grammars.md) | why highlighting needs two grammars |
 | [ADR 0004](docs/adr/0004-embedded-language-forwarding.md) | why HTML gets completion but never diagnostics |
-
-Formatting is out of scope; use
-[`@koha-community/prettier-plugin-template-toolkit`](https://www.npmjs.com/package/@koha-community/prettier-plugin-template-toolkit).

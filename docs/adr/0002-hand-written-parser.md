@@ -15,10 +15,11 @@ here than they look: TT's grammar is small, and our largest observed template is
 133 KB, well within full-reparse budget on a keystroke debounce.
 
 `@koha-community/prettier-plugin-template-toolkit` (MIT, maintained) was examined
-and rejected as a foundation. It is regex-driven and replaces TT constructs with
-opaque placeholders for Prettier to lay out. It never resolves an expression into
-a variable path and models no scopes, so it cannot answer a completion request.
-It remains the recommendation for formatting, which we deliberately do not do.
+and rejected as the language-server foundation. It is regex-driven and replaces
+TT constructs with opaque placeholders for Prettier to lay out. It never resolves
+an expression into a variable path and models no scopes, so it cannot answer a
+completion request. It does now power the separate client-side document formatter;
+that use does not replace or participate in the semantic parser described here.
 
 Regex-only was rejected because scope-aware alias resolution and reliable `END`
 balancing are not achievable with it, and those are the features being bought.
@@ -35,6 +36,13 @@ usable tree with correct scopes around the cursor.
 
 The parser is plain TypeScript with no native dependencies, so it runs anywhere
 Node runs and unit-tests without an editor.
+
+Formatting uses a pinned, vendored copy of the Template Toolkit Prettier plugin's
+small runtime rather than its parser for language intelligence. Local compatibility
+patches keep partial HTML boundary tags lossless, cover every block directive known
+to the semantic parser, and remove a process-wide debug side effect. Compatibility
+tests are required because these two independent descriptions of TT syntax can
+drift.
 
 The TextMate grammar remains a second, independent description of TT syntax. VS
 Code offers no way to share one parser between tokenization and language

@@ -6,8 +6,8 @@ are given whitespace projections of the document — every character that is not
 theirs replaced by a space, newlines kept — so positions map one to one and no
 source map is involved.
 
-Only completion and hover are forwarded. Diagnostics, formatting, folding and
-symbols are not.
+Only completion and hover are forwarded. Diagnostics, HTML-language-service
+formatting, folding and symbols are not.
 
 ## Considered Options
 
@@ -42,8 +42,12 @@ matched by the return.
 Emmet works, because the extension maps `tt` to `html` in
 `configurationDefaults`, and Emmet is a completion-time feature.
 
-HTML formatting is unavailable, which is consistent with the decision not to
-ship a formatter at all.
+Formatting is supplied separately by a client-side document provider built on
+Prettier and the Template Toolkit-specific plugin. It receives the original TT
+source, never the lossy HTML projection described here, and is therefore not an
+exception to the restriction on forwarding HTML-language-service formatting.
+Users opt into formatting on save through `editor.formatOnSave` and can disable
+the provider with `ttIntellisense.formatting.enabled`.
 
 Auto-closing tags travel as a custom request rather than an LSP capability,
 because the protocol has none for on-type behaviour. The client watches for `>`

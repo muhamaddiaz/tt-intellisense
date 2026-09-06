@@ -7,12 +7,15 @@ import {
   type ServerOptions,
 } from "vscode-languageclient/node";
 
+import { activateFormatter } from "./formatter";
 import { activateTagClosing } from "./tag-closing";
 
 let client: LanguageClient | undefined;
 let tagClosing: Disposable | undefined;
 
 export function activate(context: ExtensionContext): void {
+  context.subscriptions.push(activateFormatter());
+
   const module = context.asAbsolutePath(path.join("out", "server", "server.js"));
 
   const serverOptions: ServerOptions = {
