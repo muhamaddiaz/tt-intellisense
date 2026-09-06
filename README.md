@@ -11,9 +11,24 @@ Targets VS Code and forks (Cursor, VSCodium). Distributed as a `.vsix`.
 | Milestone | State |
 |---|---|
 | M1 — language registration + grammar | done |
-| M2 — INCLUDE / BLOCK navigation | not started |
+| M2 — INCLUDE / BLOCK navigation | done |
 | M3 — parser, structural diagnostics, folding, symbols | not started |
 | M4 — schema layers, completion, hover | not started |
+
+## Navigation coverage
+
+Template references resolve against the referencing file's own directory first,
+then `ttIntellisense.includePath`. A block defined in the same document wins
+over a file, matching Template Toolkit.
+
+Unresolvable references are normal and produce no diagnostic — a partial
+working copy that holds only the pages being edited will not contain the header
+and footer it includes. On complete template trees in the reference corpus
+resolution reaches 91–100%; across the whole corpus, which is mostly partial
+checkouts, it is 54%.
+
+Blocks defined in a *different* file are not yet resolved. That needs a
+workspace index and arrives with M3.
 
 ## Design
 
