@@ -105,6 +105,30 @@ your-project/
 Add more dumps from different pages to widen coverage — `ir.var.*` is populated
 per page, so one dump never contains everything.
 
+#### Sharing one dump across every project
+
+If your templates live in many separate folders, you do not want a copy of the
+dump in each. Point the setting at a single location instead — absolute paths
+and `~` are both honoured:
+
+```jsonc
+// User settings, applies everywhere
+"ttIntellisense.schema.dumpDirectory": "~/.tt-schema"
+```
+
+Or read a shared dump *and* a project-local one, merged together:
+
+```jsonc
+"ttIntellisense.schema.dumpDirectory": ["~/.tt-schema", ".tt-schema"]
+```
+
+Relative entries resolve against each workspace folder; absolute ones are used
+as given and read once however many folders are open. `curatedFile` works the
+same way.
+
+Keeping the shared dump outside any repository is worth doing on its own: a file
+that lives in `~` cannot be committed by accident.
+
 **JSON is preferred**, because it states outright which fields are lists. The
 ASCII tree format your Perl side already produces is also read.
 
@@ -181,8 +205,8 @@ not form valid HTML on its own, so they would flag correct files.
 | Setting | Default | What it does |
 |---|---|---|
 | `ttIntellisense.includePath` | `[]` | Extra directories for resolving includes, like TT's `INCLUDE_PATH`. The current file's directory is always tried first. |
-| `ttIntellisense.schema.dumpDirectory` | `.tt-schema` | Where stash dumps live. |
-| `ttIntellisense.schema.curatedFile` | `tt-schema.json` | Curated descriptions and types. |
+| `ttIntellisense.schema.dumpDirectory` | `.tt-schema` | Where stash dumps live. One path or a list. Relative to each workspace folder; absolute and `~` paths used as given, so one dump can serve every project. |
+| `ttIntellisense.schema.curatedFile` | `tt-schema.json` | Curated descriptions and types. Same path rules. |
 | `ttIntellisense.diagnostics.structural` | `true` | Report structural errors. |
 | `ttIntellisense.embedded.enabled` | `true` | HTML/CSS completion and hover. |
 | `ttIntellisense.autoClosingTags` | `true` | Insert closing tags on `>` and `/`. |

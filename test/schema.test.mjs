@@ -292,3 +292,78 @@ test("a configured curated file is the one actually read", () => {
   s.build([d]);
   assert.equal(lookup(s.schema, ["a", "b"])?.description, "From custom.");
 });
+
+// ------------------------------------------------- global dump locations
+// Regression: dump paths were joined onto each workspace folder, so an
+// absolute path became `<workspace>/<abs>` and a shared dump was unreachable.
+
+function sharedDump() {
+  const d = mkdtempSync(join(tmpdir(), "tt-shared-"));
+  writeFileSync(join(d, "shared.txt"), "ir\n`- from_shared = yes\n");
+  return d;
+}
+
+function workspaceWithDump() {
+  const d = mkdtempSync(join(tmpdir(), "tt-ws-"));
+  mkdirSync(join(d, ".tt-schema"), { recursive: true });
+  writeFileSync(join(d, ".tt-schema", "local.txt"), "ir\n`- from_local = yes\n");
+  return d;
+}
+
+test("an absolute dump directory is read as given", () => {
+  const s = new SchemaStore();
+  s.configure({ dumpDirectory: sharedDump() });
+  s.build([workspaceWithDump()]);
+  assert.ok(lookup(s.schema, ["ir", "from_shared"]), "absolute path not read");
+});
+
+test("a list mixes a shared location with a workspace-relative one", () => {
+  const s = new SchemaStore();
+  s.configure({ dumpDirectory: [sharedDump(), ".tt-schema"] });
+  s.build([workspaceWithDump()]);
+  assert.ok(lookup(s.schema, ["ir", "from_shared"]), "shared dump missing");
+  assert.ok(lookup(s.schema, ["ir", "from_local"]), "workspace dump missing");
+});
+
+test("a relative path still resolves per workspace folder", () => {
+  const s = new SchemaStore();
+  s.build([workspaceWithDump()]);
+  assert.ok(lookup(s.schema, ["ir", "from_local"]));
+  assert.ok(!lookup(s.schema, ["ir", "from_shared"]));
+});
+
+test("a shared location is read once, not once per workspace folder", () => {
+  const shared = sharedDump();
+  const a = workspaceWithDump();
+  const s = new SchemaStore();
+  s.configure({ dumpDirectory: [shared] });
+  s.build([a, a, a]);
+  assert.equal(s.report.dumpFiles, 1, "shared dump read more than once");
+});
+
+test("~ expands to the home directory", () => {
+  const s = new SchemaStore();
+  // Nothing is expected to exist there; this asserts the path is not mangled
+  // into <workspace>/~/... which is what the old join produced.
+  s.configure({ dumpDirectory: "~/almost-certainly-not-present-tt-schema" });
+  s.build([workspaceWithDump()]);
+  assert.equal(s.report.dumpFiles, 0);
+  assert.ok(s.dumpDirectory.startsWith("~"), "configured value should be reported as written");
+});
+
+test("an absolute curated file is read as given", () => {
+  const d = mkdtempSync(join(tmpdir(), "tt-cur-"));
+  const f = join(d, "shared-schema.json");
+  writeFileSync(f, JSON.stringify({ "global.is_en": { description: "Shared." } }));
+  const s = new SchemaStore();
+  s.configure({ curatedFile: f });
+  s.build([workspaceWithDump()]);
+  assert.equal(lookup(s.schema, ["global", "is_en"])?.description, "Shared.");
+});
+
+test("empty entries are ignored rather than resolving to the workspace root", () => {
+  const s = new SchemaStore();
+  s.configure({ dumpDirectory: ["", "  ", ".tt-schema"] });
+  s.build([workspaceWithDump()]);
+  assert.ok(lookup(s.schema, ["ir", "from_local"]));
+});

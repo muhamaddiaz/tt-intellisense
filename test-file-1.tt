@@ -1,6 +1,7 @@
 [%# Version 0.5 %]
 [% page_name = "BOC and BOD" %]
 [% INCLUDE include_header.tt %]
+
 <div class="page-submenu submenu-ir section-profile-boc-bod section-tab subpage-top-decor sub-text modal-popup">
   <div class="container">
     <ul class="nav nav-tabs" id="myTab" role="tablist">
@@ -57,7 +58,7 @@
                         <img class="img-mgmt-inner" src="[% director.url_image %]">
                         <div class="boxName-inner">
                           <p class="boc-bod-name">[% director.name %]</p>
-                      <p class="boc-bod-position">[% IF global.is_en %][% director.designation %][% ELSE %][% director.remarks %][% END %]</p>
+                          <p class="boc-bod-position">[% IF global.is_en %][% director.designation %][% ELSE %][% director.remarks %][% END %]</p>
                         </div>
                       </div>
                       <div class="col-lg-8 col-md-8 col-sm-8 col-12">
@@ -113,8 +114,9 @@
                       <div class="col-lg-8 col-md-8 col-sm-8 col-12">
                         <div class="box-grid-inner desc">
                           <div class="box-profile-desc">
-                        [% IF global.is_en %][% director.description %][% ELSE %][% director.description_summary %][% END %]
+                            [% IF global.is_en %][% director.description %][% ELSE %][% director.description_summary %][% END %]
                           </div>
+                          [% INCLUDE test-file-2 %]
                         </div>
                       </div>
                     </div>

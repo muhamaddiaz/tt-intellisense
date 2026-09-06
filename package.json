@@ -71,14 +71,26 @@
           "markdownDescription": "Report structural problems: unbalanced `END`, unclosed blocks, unterminated tags, misplaced `ELSE`/`CASE`/`CATCH`, and mistyped directive keywords."
         },
         "ttIntellisense.schema.dumpDirectory": {
-          "type": "string",
+          "type": [
+            "string",
+            "array"
+          ],
+          "items": {
+            "type": "string"
+          },
           "default": ".tt-schema",
-          "markdownDescription": "Directory holding runtime stash dumps, relative to each workspace folder. JSON dumps are preferred because they express lists; the ASCII tree format is also accepted. **Keep this directory out of version control** \u2014 dumps capture real values from real renders and routinely contain credentials."
+          "markdownDescription": "Where runtime stash dumps live. Accepts one path or a list.\n\nA relative path is resolved against each workspace folder. An **absolute path**, or one starting `~`, is used as given \u2014 which is how one dump can serve every project instead of being copied into each. A dump kept outside any repository also cannot be committed by accident.\n\nExample: `[\"~/.tt-schema\", \".tt-schema\"]` reads a shared dump plus a project-local one.\n\nJSON dumps are preferred because they express lists; the ASCII tree format is also read. **Keep dumps out of version control** \u2014 they capture real values from real renders and routinely contain credentials."
         },
         "ttIntellisense.schema.curatedFile": {
-          "type": "string",
+          "type": [
+            "string",
+            "array"
+          ],
+          "items": {
+            "type": "string"
+          },
           "default": "tt-schema.json",
-          "markdownDescription": "Curated schema file, relative to each workspace folder. Maps dotted paths to `description` and `type`, overriding what dumps and mining supply."
+          "markdownDescription": "Curated schema file mapping dotted paths to `description` and `type`, overriding what dumps and mining supply. Accepts one path or a list, resolved the same way as `#ttIntellisense.schema.dumpDirectory#`."
         },
         "ttIntellisense.embedded.enabled": {
           "type": "boolean",

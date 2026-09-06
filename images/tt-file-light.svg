@@ -1,5 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <title>Template Toolkit file</title>
   <path fill="none" stroke="#415466" stroke-linejoin="round" stroke-width="2.2" d="M7 2.5h13l5 5v22H7z"/>
   <path fill="none" stroke="#415466" stroke-linejoin="round" stroke-width="2.2" d="M20 2.5v5h5"/>
-  <path fill="none" stroke="#008CA8" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="m12 13-3 3 3 3m8-6 3 3-3 3m-5.8 3 3.6-12"/>
+  <path fill="none" stroke="#008CA8" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 11v10c0 2 1 3 3 3m-5.5-9h5M19 11v10c0 2 1 3 3 3m-5.5-9h5"/>
 </svg>

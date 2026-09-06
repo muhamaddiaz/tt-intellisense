@@ -5,17 +5,25 @@
  * every level: no layer is complete, so none may erase another. See ADR 0001.
  */
 import { readFileSync, readdirSync, statSync } from "node:fs";
-import { basename, join } from "node:path";
+import { homedir } from "node:os";
+import { basename, isAbsolute, join, resolve } from "node:path";
 import { parseCurated, parseDump } from "./dump";
 import { Miner } from "./mine";
 import { merge, node, type SchemaNode } from "./model";
 import { isSecretKey } from "./redact";
 
 export interface StoreOptions {
-  /** Directory holding stash dumps, relative to each workspace folder. */
-  dumpDirectory: string;
-  /** Curated schema filename, relative to each workspace folder. */
-  curatedFile: string;
+  /**
+   * Where stash dumps live. One location or several.
+   *
+   * A relative path is resolved against each workspace folder. An absolute path
+   * or one starting `~` is used as given, which is how a single dump can be
+   * shared by every project instead of copied into each one — worth doing, since
+   * a dump kept outside any repository cannot be committed by accident.
+   */
+  dumpDirectory: string | string[];
+  /** Curated schema file, resolved the same way as `dumpDirectory`. */
+  curatedFile: string | string[];
   maxFiles: number;
   maxFileBytes: number;
 }
@@ -73,15 +81,15 @@ export class SchemaStore {
   configure(options: Partial<StoreOptions>): boolean {
     const next = { ...this.options, ...options };
     const changed = (Object.keys(next) as Array<keyof StoreOptions>).some(
-      (k) => next[k] !== this.options[k]
+      (k) => JSON.stringify(next[k]) !== JSON.stringify(this.options[k])
     );
     this.options = next;
     return changed;
   }
 
-  /** The directory dumps are read from, for messages to the user. */
+  /** The dump locations, as configured, for messages to the user. */
   get dumpDirectory(): string {
-    return this.options.dumpDirectory;
+    return toList(this.options.dumpDirectory).join(", ");
   }
 
   get schema(): SchemaNode {
@@ -109,25 +117,31 @@ export class SchemaStore {
       dumpsWithSecrets: [],
     };
 
-    for (const dir of workspaceDirs) {
-      // Curated layer.
-      const curatedPath = join(dir, this.options.curatedFile);
-      const curatedText = readIfFile(curatedPath, this.options.maxFileBytes);
-      if (curatedText !== undefined) {
-        merge(this.curatedLayer, parseCurated(curatedText));
-        report.curated = true;
-      }
+    // Locations outside any workspace are read once, not once per folder.
+    const seen = new Set<string>();
 
-      // Dump layer.
-      const dumpDir = join(dir, this.options.dumpDirectory);
+    for (const curatedPath of expand(this.options.curatedFile, workspaceDirs)) {
+      if (seen.has(curatedPath)) continue;
+      seen.add(curatedPath);
+      const curatedText = readIfFile(curatedPath, this.options.maxFileBytes);
+      if (curatedText === undefined) continue;
+      merge(this.curatedLayer, parseCurated(curatedText));
+      report.curated = true;
+    }
+
+    for (const dumpDir of expand(this.options.dumpDirectory, workspaceDirs)) {
       for (const file of listFiles(dumpDir)) {
+        if (seen.has(file)) continue;
+        seen.add(file);
         const text = readIfFile(file, this.options.maxFileBytes);
         if (text === undefined) continue;
         merge(this.dumpLayer, parseDump(text));
         report.dumpFiles++;
         if (looksLikeItHoldsSecrets(text)) report.dumpsWithSecrets.push(basename(file));
       }
+    }
 
+    for (const dir of workspaceDirs) {
       // Mined layer.
       let budget = this.options.maxFiles;
       for (const file of walkTemplates(dir, this.options.maxFileBytes)) {
@@ -165,6 +179,29 @@ export class SchemaStore {
     merge(combined, this.curatedLayer);
     this.combined = combined;
   }
+}
+
+function toList(value: string | string[]): string[] {
+  return (Array.isArray(value) ? value : [value]).filter((v) => v.trim() !== "");
+}
+
+/** Expands `~`, keeps absolute paths, resolves relative ones per workspace. */
+function expand(value: string | string[], workspaceDirs: string[]): string[] {
+  const out: string[] = [];
+
+  for (const entry of toList(value)) {
+    if (entry === "~" || entry.startsWith("~/")) {
+      out.push(resolve(homedir(), entry.slice(2)));
+      continue;
+    }
+    if (isAbsolute(entry)) {
+      out.push(entry);
+      continue;
+    }
+    for (const dir of workspaceDirs) out.push(join(dir, entry));
+  }
+
+  return out;
 }
 
 function countChildren(n: SchemaNode): number {
