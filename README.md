@@ -50,7 +50,7 @@ npm install
 npm run package
 ```
 
-Either way you get `tt-intellisense-0.2.0.vsix` in the project root.
+Either way you get `tt-intellisense-1.0.0.vsix` in the project root.
 
 > On Windows, `npm` scripts run through `cmd.exe` by default. If PowerShell
 > blocks `npm.ps1` with a script-execution error, run
@@ -67,12 +67,12 @@ Or from a terminal:
 
 ```powershell
 # Windows
-cursor --install-extension .\tt-intellisense-0.2.0.vsix
+cursor --install-extension .\tt-intellisense-1.0.0.vsix
 ```
 
 ```bash
 # macOS and Linux
-cursor --install-extension ./tt-intellisense-0.2.0.vsix
+cursor --install-extension ./tt-intellisense-1.0.0.vsix
 ```
 
 Use `code` instead of `cursor` on VS Code. If neither command is found, add it
