@@ -146,13 +146,14 @@ function classify(tokens: Token[]): {
     };
   }
 
-  if (kw === "BLOCK") {
+  // BLOCK and VIEW both take a name that identifies them elsewhere.
+  if (kw === "BLOCK" || kw === "VIEW") {
     const nameToken =
       tokens[1] && (tokens[1].kind === "ident" || tokens[1].kind === "string")
         ? tokens[1]
         : null;
     const name = nameToken ? nameToken.value.replace(/^['"]|['"]$/g, "") : null;
-    return { keyword: kw, keywordToken: first, opens: "BLOCK", name, nameToken };
+    return { keyword: kw, keywordToken: first, opens: kw, name, nameToken };
   }
 
   return {

@@ -82,6 +82,8 @@ function kindFor(block: ParsedBlock): SymbolKind {
   switch (block.keyword) {
     case "BLOCK":
       return SymbolKind.Function;
+    case "VIEW":
+      return SymbolKind.Class;
     case "FOREACH":
     case "FOR":
     case "WHILE":

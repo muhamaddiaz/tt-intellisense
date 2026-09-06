@@ -68,6 +68,11 @@ of a mistake.
 Across the 289-file reference corpus the parser reports zero diagnostics, which
 is the expected result: those templates are known good.
 
+That corpus exercises only 24 of Template Toolkit's directives, so it cannot on
+its own show the parser is right. Every directive is therefore also tested
+explicitly, and the test asserts that no keyword in the lexer lacks a case — a
+gap that previously hid a missing `VIEW`.
+
 ## Design
 
 Decisions and their reasoning live in [`docs/adr/`](docs/adr/). Domain

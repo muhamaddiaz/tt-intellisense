@@ -47,16 +47,16 @@ export interface Token {
 /** Every keyword that may begin a directive. */
 export const DIRECTIVE_KEYWORDS = new Set([
   "GET", "SET", "CALL", "DEFAULT", "INSERT", "INCLUDE", "PROCESS", "WRAPPER",
-  "BLOCK", "IF", "UNLESS", "ELSIF", "ELSE", "SWITCH", "CASE", "FOREACH", "FOR",
-  "WHILE", "FILTER", "USE", "MACRO", "PERL", "RAWPERL", "TRY", "THROW", "CATCH",
-  "FINAL", "NEXT", "LAST", "BREAK", "RETURN", "STOP", "CLEAR", "TAGS", "META",
-  "DEBUG", "END",
+  "BLOCK", "VIEW", "IF", "UNLESS", "ELSIF", "ELSE", "SWITCH", "CASE", "FOREACH",
+  "FOR", "WHILE", "FILTER", "USE", "MACRO", "PERL", "RAWPERL", "TRY", "THROW",
+  "CATCH", "FINAL", "NEXT", "LAST", "BREAK", "RETURN", "STOP", "CLEAR", "TAGS",
+  "META", "DEBUG", "END",
 ]);
 
 /** Keywords that open a block and require a matching END. */
 export const BLOCK_OPENERS = new Set([
   "IF", "UNLESS", "FOREACH", "FOR", "WHILE", "SWITCH", "TRY", "WRAPPER",
-  "BLOCK", "FILTER", "PERL", "RAWPERL",
+  "BLOCK", "VIEW", "FILTER", "PERL", "RAWPERL",
 ]);
 
 /** Keywords valid only as a clause inside a specific block. */

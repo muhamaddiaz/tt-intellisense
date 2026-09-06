@@ -225,7 +225,7 @@
     },
     "keyword-block": {
       "name": "keyword.control.block.tt",
-      "match": "\\b(IF|UNLESS|ELSIF|ELSE|FOREACH|FOR|WHILE|SWITCH|CASE|TRY|CATCH|FINAL|BLOCK|WRAPPER|FILTER|MACRO|PERL|RAWPERL)\\b"
+      "match": "\\b(IF|UNLESS|ELSIF|ELSE|FOREACH|FOR|WHILE|SWITCH|CASE|TRY|CATCH|FINAL|BLOCK|VIEW|WRAPPER|FILTER|MACRO|PERL|RAWPERL)\\b"
     },
     "keyword-terminator": {
       "name": "keyword.control.end.tt",
@@ -354,7 +354,7 @@
       }
     },
     "block-name": {
-      "match": "\\b(BLOCK)\\s+([a-zA-Z_][a-zA-Z0-9_./-]*)",
+      "match": "\\b(BLOCK|VIEW)\\s+([a-zA-Z_][a-zA-Z0-9_./-]*)",
       "captures": {
         "1": {
           "name": "keyword.control.block.tt"

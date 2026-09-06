@@ -162,3 +162,8 @@ test("second fixture: broader constructs tokenize cleanly", async () => {
   kw("truncate", /support\.function\.filter\.tt/);
   kw("replace", /support\.function\.vmethod\.tt/);
 });
+
+test("VIEW is scoped as a block keyword and its name as a definition", async () => {
+  assert.ok(await hasScope("[% VIEW my_view %]", "VIEW", /keyword\.control\.block\.tt/));
+  assert.ok(await hasScope("[% VIEW my_view %]", "my_view", /entity\.name\.function\.block\.tt/));
+});
