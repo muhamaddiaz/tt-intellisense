@@ -142,7 +142,8 @@
     "test": "node --test test/*.test.mjs test/*.test.cjs",
     "pretest": "node test/fetch-grammars.mjs && tsc -p .",
     "vscode:prepublish": "npm run build",
-    "package": "vsce package --allow-missing-repository --baseContentUrl https://example.invalid/tt --baseImagesUrl https://example.invalid/tt"
+    "package": "vsce package",
+    "publish:ovsx": "ovsx publish"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
@@ -163,5 +164,23 @@
   "activationEvents": [
     "onLanguage:tt"
   ],
-  "publisher": "muhamaddiaz"
+  "publisher": "muhamaddiaz",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/muhamaddiaz/tt-intellisense.git"
+  },
+  "bugs": {
+    "url": "https://github.com/muhamaddiaz/tt-intellisense/issues"
+  },
+  "homepage": "https://github.com/muhamaddiaz/tt-intellisense#readme",
+  "keywords": [
+    "template toolkit",
+    "tt",
+    "tt2",
+    "perl",
+    "template",
+    "html",
+    "syntax highlighting",
+    "intellisense"
+  ]
 }

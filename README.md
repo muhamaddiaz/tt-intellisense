@@ -378,6 +378,24 @@ npm run build     # compile only
 npm run package   # build the .vsix
 ```
 
+### Publishing
+
+The extension is published to [Open VSX](https://open-vsx.org) as
+`muhamaddiaz.tt-intellisense`, which is where Cursor and other VS Code forks
+install from.
+
+```bash
+npx ovsx create-namespace muhamaddiaz -p <token>   # once, if not already created
+npm run package
+npx ovsx publish tt-intellisense-<version>.vsix -p <token>
+```
+
+Tokens come from your Open VSX profile. Bump `version` in `package.json` first —
+a version that already exists is rejected.
+
+Note that `muhamaddiaz.tt` is a **different** extension in the same namespace,
+published from another repository. Publishing this one does not affect it.
+
 The same commands work on Windows, macOS and Linux.
 
 Grammar correctness is checked headlessly, so no editor is needed to run the

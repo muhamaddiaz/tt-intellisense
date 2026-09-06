@@ -8,6 +8,9 @@ out/**/*.map
 node_modules/.bin/**
 tsconfig.json
 CONTEXT.md
+
+# Scratch templates used while developing; not part of the extension.
+test-file-*.tt
 **/*.ts
 .gitignore
 .vscodeignore
