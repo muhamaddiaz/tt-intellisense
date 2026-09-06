@@ -8,6 +8,12 @@
 
 [% INCLUDE include_header.tt %]
 
+<style>
+  .test {
+    color: red;
+  }
+</style>
+
 <div>
   Helloworld
   <ul>
