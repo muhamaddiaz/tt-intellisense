@@ -9,7 +9,7 @@ Node.js 18 or newer is the only prerequisite.
 
 ```bash
 npm install
-npm test          # 284 tests
+npm test          # 288 tests
 npm run build     # compile only
 npm run package   # build the .vsix
 ```

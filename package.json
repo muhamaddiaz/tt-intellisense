@@ -80,7 +80,7 @@
             "type": "string"
           },
           "default": ".tt-schema",
-          "markdownDescription": "Where runtime stash dumps live. Accepts one path or a list.\n\nA relative path is resolved against each workspace folder. An **absolute path**, or one starting `~`, is used as given — which is how one dump can serve every project instead of being copied into each. A dump kept outside any repository also cannot be committed by accident.\n\nExample: `[\"~/.tt-schema\", \".tt-schema\"]` reads a shared dump plus a project-local one.\n\nFiles ending `.json`, `.txt`, `.dump`, `.tree` or `.stash` are read; the format is detected from content, not the name. JSON is preferred because it states outright which fields are lists. **Keep dumps out of version control** — they capture real values from real renders and routinely contain credentials."
+          "markdownDescription": "Where runtime stash dumps live. Accepts one path or a list.\n\nA relative path is resolved against each workspace folder. An **absolute path**, or one starting `~`, is used as given \u2014 which is how one dump can serve every project instead of being copied into each. A dump kept outside any repository also cannot be committed by accident.\n\nExample: `[\"~/.tt-schema\", \".tt-schema\"]` reads a shared dump plus a project-local one.\n\nFiles ending `.json`, `.txt`, `.dump`, `.tree` or `.stash` are read; the format is detected from content, not the name. JSON is preferred because it states outright which fields are lists. **Keep dumps out of version control** \u2014 they capture real values from real renders and routinely contain credentials."
         },
         "ttIntellisense.schema.curatedFile": {
           "type": [
@@ -139,7 +139,7 @@
   },
   "scripts": {
     "build": "tsc -p .",
-    "test": "node --test test/*.test.mjs test/*.test.cjs",
+    "test": "node --test",
     "pretest": "node test/fetch-grammars.mjs && tsc -p .",
     "vscode:prepublish": "npm run build",
     "package": "vsce package",
