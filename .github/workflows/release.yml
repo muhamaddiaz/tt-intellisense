@@ -1,0 +1,65 @@
+# Publishes to Open VSX when a version tag is pushed.
+#
+#   git tag v1.0.2 && git push origin v1.0.2
+#
+# Requires an OVSX_PAT secret, from https://open-vsx.org/user-settings/tokens.
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # A tag that disagrees with package.json publishes a version nobody
+      # expects, and the tag cannot be moved once anyone has fetched it. Fail
+      # here instead, where the fix is still cheap.
+      - name: Check the tag matches package.json
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          manifest="$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$manifest" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match package.json version $manifest"
+            exit 1
+          fi
+          echo "publishing version $manifest"
+
+      # Publishing something that fails its own tests is worse than not
+      # publishing, so this runs before the package is built.
+      - run: npm test
+
+      - name: Build the extension
+        run: |
+          npm run package
+          echo "VSIX=tt-intellisense-$(node -p "require('./package.json').version").vsix" >> "$GITHUB_ENV"
+
+      # ovsx reads OVSX_PAT from the environment. Passing it as an argument
+      # would put the token in the process list instead.
+      - name: Publish to Open VSX
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        run: npx ovsx publish "$VSIX"
+
+      # Attaches the exact artifact that was published, so the release and the
+      # registry cannot drift apart.
+      - name: Attach the .vsix to the GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.VSIX }}
+          generate_release_notes: true

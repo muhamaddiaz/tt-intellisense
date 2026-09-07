@@ -1,4 +1,5 @@
 .git/**
+.github/**
 .tt-schema/**
 .claude/**
 src/**

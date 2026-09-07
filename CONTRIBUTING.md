@@ -80,21 +80,51 @@ Nothing proves the extension activates, that keybindings reach their commands,
 or that the language server starts. Those are process-level and would need
 `@vscode/test-electron`.
 
-## Publishing
+## Releasing
 
 Published to [Open VSX](https://open-vsx.org) as `muhamaddiaz.tt-intellisense`,
 which is where Cursor and other VS Code forks install from.
 
+Releases are driven by tags. Bump the version, commit, then tag:
+
 ```bash
-npm run package
-npx ovsx publish tt-intellisense-<version>.vsix -p <token>
+npm version patch      # or minor / major — this commits and tags
+git push --follow-tags
 ```
 
-Tokens come from your Open VSX profile. Bump `version` in `package.json` first —
-a version that already exists is rejected.
+Pushing a `v*` tag runs [`.github/workflows/release.yml`](.github/workflows/release.yml),
+which checks the tag agrees with `package.json`, runs the tests, builds the
+`.vsix`, publishes it, and attaches the same file to a GitHub release.
+
+The tag check exists because a tag that disagrees with the manifest publishes a
+version nobody expects, and a tag cannot be moved once anyone has fetched it.
+Failing in CI is the cheap version of that mistake.
+
+### One-time setup
+
+The workflow needs an `OVSX_PAT` repository secret, from
+[your Open VSX tokens](https://open-vsx.org/user-settings/tokens). The token is
+passed through the environment rather than as an argument, so it does not appear
+in the process list.
+
+To publish by hand instead:
+
+```bash
+npm run package
+OVSX_PAT=<token> npx ovsx publish tt-intellisense-<version>.vsix
+```
+
+A version that already exists on the registry is rejected, so bump first.
 
 `muhamaddiaz.tt` is a **different** extension in the same namespace, published
 from another repository. Publishing this one does not affect it.
+
+## Continuous integration
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs the suite on every
+push and pull request, on Linux and Windows. Windows is included because the
+extension handles CRLF documents and platform paths, and both are easy to break
+without noticing on macOS.
 
 ## Design notes
 
