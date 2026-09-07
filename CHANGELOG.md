@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.0.2
+
+No change to how the extension behaves. This release exists to exercise the
+tag-driven publishing workflow.
+
+- Documentation split: the readme now describes the extension and its settings,
+  while building, testing and design notes moved to `CONTRIBUTING.md`.
+- Added a licence file, a changelog, and repository metadata to the listing.
+- Publishing now runs from a GitHub Actions workflow triggered by a version tag,
+  which checks the tag agrees with the manifest and runs the tests before
+  publishing anything.
+
 ## 1.0.1
 
 First published release.
