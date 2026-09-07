@@ -128,7 +128,7 @@ after it is misread.
 
 ## Contributing
 
-Build, test and design notes are in [CONTRIBUTION.md](CONTRIBUTION.md).
+Build, test and design notes are in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Licence
 
